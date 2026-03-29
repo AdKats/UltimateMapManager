@@ -23,8 +23,6 @@ using System.Data;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security;
-using System.Security.Permissions;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -431,7 +429,7 @@ namespace PRoConEvents
             this.m_strCurrentServerName = "";
             this.m_LGDPVList = new List<CPluginVariable>();
             this.m_LGPVList = new List<CPluginVariable>();
-            this.m_blUseSystemTZ = SecurityManager.IsGranted(new SecurityPermission(SecurityPermissionFlag.UnmanagedCode));
+            this.m_blUseSystemTZ = true; // CAS removed in .NET 8; assume unmanaged code access is granted
             this.m_strVotedMapFileName = "";
             this.m_strVotedGameMode = "";
             this.m_iCurrentRoundCount = 0;
