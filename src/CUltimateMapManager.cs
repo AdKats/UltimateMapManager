@@ -18,42 +18,45 @@
 */
 
 using System;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Reflection;
 using System.Collections.Generic;
 using System.Data;
-using System.Text.RegularExpressions;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Permissions;
-using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+
 using Microsoft.Win32;
 
 using PRoCon.Core;
-using PRoCon.Core.Plugin;
-using PRoCon.Core.Plugin.Commands;
-using PRoCon.Core.Players;
-using PRoCon.Core.Players.Items;
 using PRoCon.Core.Battlemap;
 using PRoCon.Core.Maps;
+using PRoCon.Core.Players;
+using PRoCon.Core.Players.Items;
+using PRoCon.Core.Plugin;
+using PRoCon.Core.Plugin.Commands;
 
-namespace PRoConEvents {
-    public class CUltimateMapManager : PRoConPluginAPI, IPRoConPluginInterface {
+namespace PRoConEvents
+{
+    public class CUltimateMapManager : PRoConPluginAPI, IPRoConPluginInterface
+    {
 
-        private string m_strHostName;
-        private string m_strPort;
+        private String m_strHostName;
+        private String m_strPort;
         public static String NL = System.Environment.NewLine;
 
-        private int m_iRestartLimit;
-        private bool m_blRestartNow;
+        private Int32 m_iRestartLimit;
+        private Boolean m_blRestartNow;
         private List<MaplistConfig> m_LMaplists;
         private enumBoolYesNo m_enMapManager;
         private enumBoolYesNo m_enAdminCommands;
         private enumBoolYesNo m_enRestartNow;
         private enumBoolYesNo m_enRestartWarning;
-        private int m_enRestartWarningTime;
-        private string m_strRestartWarningMessage;
+        private Int32 m_enRestartWarningTime;
+        private String m_strRestartWarningMessage;
         private enumBoolYesNo m_enCompleteRounds;
         private enumBoolYesNo m_enAllowPresets;
         private enumBoolYesNo m_enPresetsAlways;
@@ -62,61 +65,64 @@ namespace PRoConEvents {
         private enumBoolYesNo m_enTimeOptions;
         private enumBoolYesNo m_enTimeNotNow;
         private enumBoolYesNo m_enUseSystemTZ;
-        private string m_strTimeZone;
-        private int m_iCurrentMapList;
-        private int m_iCurrentPlayerCount;
-        private bool m_blRoundEnded;
-        private bool m_blIsFirstRound;
-        private bool m_blIsLastRound;
-        private bool m_blRestartRequested;
-        private bool m_blCheckPlayerCount;
+        private String m_strTimeZone;
+        private Int32 m_iCurrentMapList;
+        private Int32 m_iCurrentPlayerCount;
+        private Boolean m_blRoundEnded;
+        private Boolean m_blIsFirstRound;
+        private Boolean m_blIsLastRound;
+        private Boolean m_blRestartRequested;
+        private Boolean m_blCheckPlayerCount;
         private List<MaplistEntry> m_LCurrentMapList;
-        private string m_strCurrentMap;
-        private int m_iNextMapIndex;
-        private string m_strCurrentPreset;
-        private string m_strCurrentServerName;
-        private Dictionary<string, string[]> m_DPreset;
+        private String m_strCurrentMap;
+        private Int32 m_iNextMapIndex;
+        private String m_strCurrentPreset;
+        private String m_strCurrentServerName;
+        private Dictionary<String, String[]> m_DPreset;
         private List<CPluginVariable> m_LGDPVList;
         private List<CPluginVariable> m_LGPVList;
-        private bool m_blUseSystemTZ;
-        private string m_strVotedMapFileName;
-        private string m_strVotedGameMode;
-        private int m_iCurrentRoundCount;
+        private Boolean m_blUseSystemTZ;
+        private String m_strVotedMapFileName;
+        private String m_strVotedGameMode;
+        private Int32 m_iCurrentRoundCount;
 
         private enumBoolYesNo m_enDoDebugOutput;
 
-        private bool m_isPluginEnabled;
-        private bool m_isPluginInitialized;
-        private string m_strServerGameType;
-        private string m_strGameMod;
-        private string m_strServerVersion;
-        private string m_strPRoConVersion;
+        private Boolean m_isPluginEnabled;
+        private Boolean m_isPluginInitialized;
+        private String m_strServerGameType;
+        private String m_strGameMod;
+        private String m_strServerVersion;
+        private String m_strPRoConVersion;
 
-        private class MaplistConfig {
+        private class MaplistConfig
+        {
 
-            public int Index;
-            public string Name;
+            public Int32 Index;
+            public String Name;
             public enumBoolYesNo Enabled;
-            public int MinPlayers;
-            public int MaxPlayers;
-            public string MapListStart;
+            public Int32 MinPlayers;
+            public Int32 MaxPlayers;
+            public String MapListStart;
             public List<MaplistInfo> Maplist;
-            public string[] DaysValid;
-            public string TimeStart;
-            public string TimeStop;
-            public string ServerName;
-            public int MinRounds;
+            public String[] DaysValid;
+            public String TimeStart;
+            public String TimeStop;
+            public String ServerName;
+            public Int32 MinRounds;
 
-            public class MaplistInfo {
-                public string Gamemode;
-                public string PublicGamemode;
-                public string MapFileName;
-                public int Rounds;
-                public int Index;
-                public string Preset;
-                public string LoadPreset;
+            public class MaplistInfo
+            {
+                public String Gamemode;
+                public String PublicGamemode;
+                public String MapFileName;
+                public Int32 Rounds;
+                public Int32 Index;
+                public String Preset;
+                public String LoadPreset;
 
-                public MaplistInfo(int iIndex) {
+                public MaplistInfo(Int32 iIndex)
+                {
                     this.Gamemode = "ConquestLarge0";
                     this.PublicGamemode = "Conquest Large";
                     this.MapFileName = "MP_001";
@@ -126,7 +132,8 @@ namespace PRoConEvents {
                     this.LoadPreset = "None";
                 }
 
-                public MaplistInfo(string strGamemode, string strPublicGamemode, string strMapFileName, int iRounds, int iIndex) {
+                public MaplistInfo(String strGamemode, String strPublicGamemode, String strMapFileName, Int32 iRounds, Int32 iIndex)
+                {
                     this.Gamemode = strGamemode;
                     this.PublicGamemode = strPublicGamemode;
                     this.MapFileName = strMapFileName;
@@ -137,7 +144,8 @@ namespace PRoConEvents {
                 }
             }
 
-            public MaplistConfig(int iIndex) {
+            public MaplistConfig(Int32 iIndex)
+            {
                 this.Index = iIndex;
                 this.Name = "Map List Name";
                 this.Enabled = enumBoolYesNo.Yes;
@@ -148,8 +156,8 @@ namespace PRoConEvents {
                 this.MapListStart = "None";
                 this.MinRounds = 0;
 
-                List<string> dw = new List<string>();
-                for (int i = 0; i < 7; i++)
+                List<String> dw = new List<String>();
+                for (Int32 i = 0; i < 7; i++)
                 {
                     dw.Add(DateTime.Now.AddDays(i).ToString("dddd"));
                 }
@@ -158,15 +166,16 @@ namespace PRoConEvents {
                 this.TimeStop = "23:59";
             }
 
-            public bool isValidDay(string timezone, bool useSystemTZ, string timeStart, string timeStop) {
+            public Boolean isValidDay(String timezone, Boolean useSystemTZ, String timeStart, String timeStop)
+            {
                 DateTime current = DateTime.Now;
                 if (useSystemTZ)
                 {
                     current = TimeZoneInformation.ToLocalTime(DateTime.UtcNow, timezone);
                 }
 
-                string[] partsStart = timeStart.Split(':');
-                string[] partsStop = timeStop.Split(':');
+                String[] partsStart = timeStart.Split(':');
+                String[] partsStop = timeStop.Split(':');
                 DateTime start = new DateTime(current.Year, current.Month, current.Day, Int32.Parse(partsStart[0]), Int32.Parse(partsStart[1]), 0, 0);
                 DateTime stop = new DateTime(current.Year, current.Month, current.Day, Int32.Parse(partsStop[0]), Int32.Parse(partsStop[1]), 59, 999);
 
@@ -181,16 +190,16 @@ namespace PRoConEvents {
                         start = start.AddDays(-1);
                     }
                 }
-                return (DateTime.Compare(start, current) <= 0 && DateTime.Compare(current, stop) <= 0 && (((IList<string>)this.DaysValid).Contains(start.ToString("d")) || ((IList<string>)this.DaysValid).Contains(start.ToString("dd")) || ((IList<string>)this.DaysValid).Contains(start.ToString("ddd")) || ((IList<string>)this.DaysValid).Contains(start.ToString("dddd"))));
+                return (DateTime.Compare(start, current) <= 0 && DateTime.Compare(current, stop) <= 0 && (((IList<String>)this.DaysValid).Contains(start.ToString("d")) || ((IList<String>)this.DaysValid).Contains(start.ToString("dd")) || ((IList<String>)this.DaysValid).Contains(start.ToString("ddd")) || ((IList<String>)this.DaysValid).Contains(start.ToString("dddd"))));
             }
         }
 
         public class TimeZoneInformation
         {
             private TZI tzi; // Current time zone information.
-            public string displayName; // Current time zone display name.
-            public string standardName; // Current time zone standard name (non-DST).
-            public string daylightName; // Current time zone daylight name (DST).
+            public String displayName; // Current time zone display name.
+            public String standardName; // Current time zone standard name (non-DST).
+            public String daylightName; // Current time zone daylight name (DST).
             public static readonly List<TimeZoneInformation> timeZones; // static list of all time zones on machine.
 
             private TimeZoneInformation()
@@ -203,16 +212,16 @@ namespace PRoConEvents {
 
                 using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones"))
                 {
-                    string[] zoneNames = key.GetSubKeyNames();
+                    String[] zoneNames = key.GetSubKeyNames();
 
-                    foreach (string zoneName in zoneNames)
+                    foreach (String zoneName in zoneNames)
                     {
                         using (RegistryKey subKey = key.OpenSubKey(zoneName))
                         {
                             TimeZoneInformation tzi = new TimeZoneInformation();
-                            tzi.displayName = ((string)subKey.GetValue("Display")).Replace(",", ";");
-                            tzi.standardName = (string)subKey.GetValue("Std");
-                            tzi.daylightName = (string)subKey.GetValue("Dlt");
+                            tzi.displayName = ((String)subKey.GetValue("Display")).Replace(",", ";");
+                            tzi.standardName = (String)subKey.GetValue("Std");
+                            tzi.daylightName = (String)subKey.GetValue("Dlt");
                             tzi.InitTzi((byte[])subKey.GetValue("Tzi"));
                             timeZones.Add(tzi);
                         }
@@ -220,22 +229,22 @@ namespace PRoConEvents {
                 }
             }
 
-            private static int CompareTimeZones(string x, string y)
+            private static Int32 CompareTimeZones(String x, String y)
             {
-                int retval = 0;
+                Int32 retval = 0;
                 x = x.Replace(" ", "").Replace(".", " ").Replace(":", " ");
                 y = y.Replace(" ", "").Replace(".", " ").Replace(":", " ");
                 if (x.Substring(4, 1) != ")" && y.Substring(4, 1) != ")")
                 {
-                    retval = Int32.Parse(x.Substring(4,3)) - Int32.Parse(y.Substring(4,3));
+                    retval = Int32.Parse(x.Substring(4, 3)) - Int32.Parse(y.Substring(4, 3));
                 }
                 else if (x.Substring(4, 1) == ")" && y.Substring(4, 1) != ")")
                 {
-                    retval = 0 - Int32.Parse(y.Substring(4,3));
+                    retval = 0 - Int32.Parse(y.Substring(4, 3));
                 }
                 else if (y.Substring(4, 1) == ")" && x.Substring(4, 1) != ")")
                 {
-                    retval = Int32.Parse(x.Substring(4,3));
+                    retval = Int32.Parse(x.Substring(4, 3));
                 }
 
                 if (retval != 0)
@@ -248,7 +257,7 @@ namespace PRoConEvents {
                 }
             }
 
-            public static string[] TimeZoneNames
+            public static String[] TimeZoneNames
             {
                 get
                 {
@@ -262,7 +271,7 @@ namespace PRoConEvents {
                 }
             }
 
-            public static TimeZoneInformation GetTimeZone(string standardTimeZoneName)
+            public static TimeZoneInformation GetTimeZone(String standardTimeZoneName)
             {
                 if (standardTimeZoneName == null)
                     standardTimeZoneName = ".";
@@ -291,7 +300,7 @@ namespace PRoConEvents {
                 return SystemTimeToDateTime(ref stLocal);
             }
 
-            public static DateTime ToLocalTime(DateTime utc, string targetTimeZoneName)
+            public static DateTime ToLocalTime(DateTime utc, String targetTimeZoneName)
             {
                 TimeZoneInformation tzi = TimeZoneInformation.GetTimeZone(targetTimeZoneName);
                 return tzi.ToLocalTime(utc);
@@ -301,8 +310,8 @@ namespace PRoConEvents {
             {
                 SYSTEMTIME st;
                 FILETIME ft = new FILETIME();
-                ft.dwHighDateTime = (int)(dt.Ticks >> 32);
-                ft.dwLowDateTime = (int)(dt.Ticks & 0xFFFFFFFFL);
+                ft.dwHighDateTime = (Int32)(dt.Ticks >> 32);
+                ft.dwLowDateTime = (Int32)(dt.Ticks & 0xFFFFFFFFL);
                 NativeMethods.FileTimeToSystemTime(ref ft, out st);
                 return st;
             }
@@ -311,17 +320,18 @@ namespace PRoConEvents {
             {
                 FILETIME ft = new FILETIME();
                 NativeMethods.SystemTimeToFileTime(ref st, out ft);
-                DateTime dt = new DateTime((((long)ft.dwHighDateTime) << 32) | (uint)ft.dwLowDateTime);
+                DateTime dt = new DateTime((((Int64)ft.dwHighDateTime) << 32) | (uint)ft.dwLowDateTime);
                 return dt;
             }
 
-            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)] private struct TIME_ZONE_INFORMATION
+            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+            private struct TIME_ZONE_INFORMATION
             {
                 [MarshalAs(UnmanagedType.I4)] public Int32 Bias;
-                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string StandardName;
+                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public String StandardName;
                 public SYSTEMTIME StandardDate;
                 [MarshalAs(UnmanagedType.I4)] public Int32 StandardBias;
-                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string DaylightName;
+                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public String DaylightName;
                 public SYSTEMTIME DaylightDate;
                 [MarshalAs(UnmanagedType.I4)] public Int32 DaylightBias;
             }
@@ -340,9 +350,9 @@ namespace PRoConEvents {
 
             private struct TZI
             {
-                public int bias;
-                public int standardBias;
-                public int daylightBias;
+                public Int32 bias;
+                public Int32 standardBias;
+                public Int32 daylightBias;
                 public SYSTEMTIME standardDate;
                 public SYSTEMTIME daylightDate;
             }
@@ -360,13 +370,13 @@ namespace PRoConEvents {
 
             private struct NativeMethods
             {
-                private const string KERNEL32 = "kernel32.dll";
+                private const String KERNEL32 = "kernel32.dll";
 
                 [DllImport(KERNEL32)] public static extern uint GetTimeZoneInformation(out TIME_ZONE_INFORMATION lpTimeZoneInformation);
-                [DllImport(KERNEL32)] public static extern bool SystemTimeToTzSpecificLocalTime([In] ref TIME_ZONE_INFORMATION lpTimeZone, [In] ref SYSTEMTIME lpUniversalTime, out SYSTEMTIME lpLocalTime);
-                [DllImport(KERNEL32)] public static extern bool SystemTimeToFileTime([In] ref SYSTEMTIME lpSystemTime, out FILETIME lpFileTime);
-                [DllImport(KERNEL32)] public static extern bool FileTimeToSystemTime([In] ref FILETIME lpFileTime, out SYSTEMTIME lpSystemTime);
-                [DllImport(KERNEL32)] public static extern bool TzSpecificLocalTimeToSystemTime([In] ref TIME_ZONE_INFORMATION lpTimeZone, [In] ref SYSTEMTIME lpLocalTime, out SYSTEMTIME lpUniversalTime);
+                [DllImport(KERNEL32)] public static extern Boolean SystemTimeToTzSpecificLocalTime([In] ref TIME_ZONE_INFORMATION lpTimeZone, [In] ref SYSTEMTIME lpUniversalTime, out SYSTEMTIME lpLocalTime);
+                [DllImport(KERNEL32)] public static extern Boolean SystemTimeToFileTime([In] ref SYSTEMTIME lpSystemTime, out FILETIME lpFileTime);
+                [DllImport(KERNEL32)] public static extern Boolean FileTimeToSystemTime([In] ref FILETIME lpFileTime, out SYSTEMTIME lpSystemTime);
+                [DllImport(KERNEL32)] public static extern Boolean TzSpecificLocalTimeToSystemTime([In] ref TIME_ZONE_INFORMATION lpTimeZone, [In] ref SYSTEMTIME lpLocalTime, out SYSTEMTIME lpUniversalTime);
             }
 
             private void InitTzi(byte[] info)
@@ -386,74 +396,80 @@ namespace PRoConEvents {
             }
         }
 
-        public CUltimateMapManager() {
+        public CUltimateMapManager()
+        {
 
-            this.m_iRestartLimit            = 16;
-            this.m_blRestartNow             = false;
-            this.m_LMaplists                = new List<MaplistConfig>();
-            this.m_enMapManager             = enumBoolYesNo.No;
-            this.m_enAdminCommands          = enumBoolYesNo.No;
-            this.m_enAllowPresets           = enumBoolYesNo.No;
-            this.m_enPresetsAlways          = enumBoolYesNo.No;
-            this.m_enLoadPresets            = enumBoolYesNo.No;
-            this.m_enCompleteRounds         = enumBoolYesNo.No;
-            this.m_enRestartNow             = enumBoolYesNo.No;
-            this.m_enRestartWarning         = enumBoolYesNo.Yes;
-            this.m_enRestartWarningTime     = 10;
-            this.m_strRestartWarningMessage  = "Changing map rotation to [listname] in [secs] seconds! Points will not be lost!";
-            this.m_enEnableServerName       = enumBoolYesNo.No;
-            this.m_enTimeOptions            = enumBoolYesNo.No;
-            this.m_enTimeNotNow             = enumBoolYesNo.No;
-            this.m_enUseSystemTZ            = enumBoolYesNo.No;
-            this.m_strTimeZone              = "(UTC) Coordinated Universal Time";
-            this.m_iCurrentMapList          = -1;
-            this.m_iCurrentPlayerCount      = 0;
-            this.m_blRoundEnded             = false;
-            this.m_blIsFirstRound           = true;
-            this.m_blIsLastRound            = false;
-            this.m_blRestartRequested       = false;
-            this.m_blCheckPlayerCount       = false;
-            this.m_LCurrentMapList          = new List<MaplistEntry>();
-            this.m_strCurrentMap            = "";
-            this.m_iNextMapIndex            = -1;
-            this.m_strCurrentPreset         = "";
-            this.m_strCurrentServerName     = "";
-            this.m_LGDPVList                = new List<CPluginVariable>();
-            this.m_LGPVList                 = new List<CPluginVariable>();
-            this.m_blUseSystemTZ            = SecurityManager.IsGranted(new SecurityPermission(SecurityPermissionFlag.UnmanagedCode));
-            this.m_strVotedMapFileName      = "";
-            this.m_strVotedGameMode         = "";
-            this.m_iCurrentRoundCount       = 0;
+            this.m_iRestartLimit = 16;
+            this.m_blRestartNow = false;
+            this.m_LMaplists = new List<MaplistConfig>();
+            this.m_enMapManager = enumBoolYesNo.No;
+            this.m_enAdminCommands = enumBoolYesNo.No;
+            this.m_enAllowPresets = enumBoolYesNo.No;
+            this.m_enPresetsAlways = enumBoolYesNo.No;
+            this.m_enLoadPresets = enumBoolYesNo.No;
+            this.m_enCompleteRounds = enumBoolYesNo.No;
+            this.m_enRestartNow = enumBoolYesNo.No;
+            this.m_enRestartWarning = enumBoolYesNo.Yes;
+            this.m_enRestartWarningTime = 10;
+            this.m_strRestartWarningMessage = "Changing map rotation to [listname] in [secs] seconds! Points will not be lost!";
+            this.m_enEnableServerName = enumBoolYesNo.No;
+            this.m_enTimeOptions = enumBoolYesNo.No;
+            this.m_enTimeNotNow = enumBoolYesNo.No;
+            this.m_enUseSystemTZ = enumBoolYesNo.No;
+            this.m_strTimeZone = "(UTC) Coordinated Universal Time";
+            this.m_iCurrentMapList = -1;
+            this.m_iCurrentPlayerCount = 0;
+            this.m_blRoundEnded = false;
+            this.m_blIsFirstRound = true;
+            this.m_blIsLastRound = false;
+            this.m_blRestartRequested = false;
+            this.m_blCheckPlayerCount = false;
+            this.m_LCurrentMapList = new List<MaplistEntry>();
+            this.m_strCurrentMap = "";
+            this.m_iNextMapIndex = -1;
+            this.m_strCurrentPreset = "";
+            this.m_strCurrentServerName = "";
+            this.m_LGDPVList = new List<CPluginVariable>();
+            this.m_LGPVList = new List<CPluginVariable>();
+            this.m_blUseSystemTZ = SecurityManager.IsGranted(new SecurityPermission(SecurityPermissionFlag.UnmanagedCode));
+            this.m_strVotedMapFileName = "";
+            this.m_strVotedGameMode = "";
+            this.m_iCurrentRoundCount = 0;
 
-            this.m_DPreset                  = new Dictionary<string, string[]>();
-            this.m_DPreset["Normal"]        = new string[] {};
-            this.m_DPreset["Hardcore"]      = new string[] {};
-            this.m_DPreset["Infantry Only"] = new string[] {};
+            this.m_DPreset = new Dictionary<String, String[]>();
+            this.m_DPreset["Normal"] = new String[] { };
+            this.m_DPreset["Hardcore"] = new String[] { };
+            this.m_DPreset["Infantry Only"] = new String[] { };
 
-            this.m_enDoDebugOutput          = enumBoolYesNo.Yes;
+            this.m_enDoDebugOutput = enumBoolYesNo.Yes;
 
-            this.m_isPluginEnabled          = false;
-            this.m_isPluginInitialized      = false;
+            this.m_isPluginEnabled = false;
+            this.m_isPluginInitialized = false;
             this.m_strServerGameType = "none";
         }
 
-        public string GetPluginName() {
+        public String GetPluginName()
+        {
             return "Ultimate Map Manager";
         }
 
-        public string GetPluginVersion() {
+        public String GetPluginVersion()
+        {
             return "1.2.5.0";
         }
 
-        public string GetPluginAuthor() {
+        public String GetPluginAuthor()
+        {
             return "falcontx";
         }
 
-        public string GetPluginWebsite() {
+        public String GetPluginWebsite()
+        {
             return "www.phogue.net/forumvb/showthread.php?3472";
         }
 
-        public string GetPluginDescription() {
+        public String GetPluginDescription()
+        {
             return @"
 <p>If you find this plugin useful, please consider supporting falcontx's development efforts. Donations help support the servers used for development and provide incentive for additional features and new plugins! Any amount would be appreciated!</p>
 
@@ -657,7 +673,7 @@ namespace PRoConEvents {
             - added day-dependent map lists<br/>
       </blockquote>
       <blockquote><h4>1.0.0.2 (01/09/2012)</h4>
-            - greatly decreased load time and options redraw time with long/many map lists<br/>
+            - greatly decreased load time and options redraw time with Int64/many map lists<br/>
             - fixed presets not always set properly or at correct time<br/>
             - presets for next map now set at end of round<br/>
             - fixed map list was not reloaded if number of rounds was changed<br/>
@@ -675,7 +691,8 @@ namespace PRoConEvents {
         }
 
         #region pluginSetup
-        public void OnPluginLoadingEnv(List<string> lstPluginEnv) {
+        public void OnPluginLoadingEnv(List<String> lstPluginEnv)
+        {
             Version PRoConVersion = new Version(lstPluginEnv[0]);
             this.m_strPRoConVersion = PRoConVersion.ToString();
             this.m_strServerGameType = lstPluginEnv[1].ToLower();
@@ -684,28 +701,28 @@ namespace PRoConEvents {
 
             if (this.m_strServerGameType == "bf4")
             {
-                this.m_DPreset["Normal"] = new string[] {
+                this.m_DPreset["Normal"] = new String[] {
                     "vars.preset normal",
                 };
-                this.m_DPreset["Hardcore"] = new string[] {
+                this.m_DPreset["Hardcore"] = new String[] {
                     "vars.preset hardcore",
                 };
-                this.m_DPreset["Infantry Only"] = new string[] {
+                this.m_DPreset["Infantry Only"] = new String[] {
                     "vars.preset infantry",
                 };
             }
             else if (this.m_strServerGameType == "bfhl")
             {
-                this.m_DPreset["Normal"] = new string[] {
+                this.m_DPreset["Normal"] = new String[] {
                     "vars.preset normal",
                 };
-                this.m_DPreset["Hardcore"] = new string[] {
+                this.m_DPreset["Hardcore"] = new String[] {
                     "vars.preset hardcore",
                 };
             }
             else
             {
-                this.m_DPreset["Normal"] = new string[] {
+                this.m_DPreset["Normal"] = new String[] {
                     "vars.friendlyFire false",
                     "vars.killCam true",
                     "vars.hud true",
@@ -720,7 +737,7 @@ namespace PRoConEvents {
                     "vars.playerRespawnTime 100",
                     "vars.playerManDownTime 100",
                 };
-                this.m_DPreset["Hardcore"] = new string[] {
+                this.m_DPreset["Hardcore"] = new String[] {
                     "vars.friendlyFire true",
                     "vars.killCam false",
                     "vars.hud false",
@@ -735,7 +752,7 @@ namespace PRoConEvents {
                     "vars.playerRespawnTime 100",
                     "vars.playerManDownTime 100",
                 };
-                this.m_DPreset["Infantry Only"] = new string[] {
+                this.m_DPreset["Infantry Only"] = new String[] {
                     "vars.friendlyFire false",
                     "vars.killCam true",
                     "vars.hud true",
@@ -751,17 +768,19 @@ namespace PRoConEvents {
                     "vars.playerManDownTime 100",
                 };
             }
-        
+
         }
 
-        public void OnPluginLoaded(string strHostName, string strPort, string strPRoConVersion) {
+        public void OnPluginLoaded(String strHostName, String strPort, String strPRoConVersion)
+        {
             this.m_strHostName = strHostName;
             this.m_strPort = strPort;
 
             this.RegisterEvents(this.GetType().Name, "OnLogin", "OnListPlayers", "OnPlayerLeft", "OnRoundOverTeamScores", "OnRestartLevel", "OnRunNextLevel", "OnLevelLoaded", "OnMaplistList", "OnServerInfo", "OnMaplistGetMapIndices", "OnMaplistGetRounds", "OnMaplistSave");
         }
 
-        public void OnPluginEnable() {
+        public void OnPluginEnable()
+        {
             this.m_isPluginEnabled = true;
             ResetVars();
             this.ExecuteCommand("procon.protected.pluginconsole.write", "^bUltimateMapManager: ^2Enabled!");
@@ -769,13 +788,15 @@ namespace PRoConEvents {
             this.RegisterAllCommands();
         }
 
-        public void OnPluginDisable() {
+        public void OnPluginDisable()
+        {
             this.m_isPluginEnabled = false;
-            this.ExecuteCommand("procon.protected.pluginconsole.write", "^bUltimateMapManager: ^1Disabled =(" );
+            this.ExecuteCommand("procon.protected.pluginconsole.write", "^bUltimateMapManager: ^1Disabled =(");
             this.UnregisterAllCommands();
         }
 
-        private void ResetVars() {
+        private void ResetVars()
+        {
             this.m_isPluginInitialized = false;
             this.m_iCurrentMapList = -1;
             this.m_iNextMapIndex = -1;
@@ -790,7 +811,8 @@ namespace PRoConEvents {
 
         // Lists only variables you want shown.. for instance enabling one option might hide another option 
         // It's the best I got until I implement a way for plugins to display their own small interfaces.
-        public List<CPluginVariable> GetDisplayPluginVariables() {
+        public List<CPluginVariable> GetDisplayPluginVariables()
+        {
             if (this.m_LGDPVList.Count != 0)
             {
                 return this.m_LGDPVList;
@@ -839,27 +861,27 @@ namespace PRoConEvents {
             this.m_LGDPVList.Add(new CPluginVariable("* Ultimate Map Manager|Add a new map list?", "enum.AddNewMapList(...|Create an empty map list|Create a map list based on current map list)", "..."));
             foreach (MaplistConfig MCMaplist in this.m_LMaplists)
             {
-                this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] Enable this map list?", typeof(enumBoolYesNo), MCMaplist.Enabled));
-                this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] Map list name", MCMaplist.Name.GetType(), MCMaplist.Name));
+                this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] Enable this map list?", typeof(enumBoolYesNo), MCMaplist.Enabled));
+                this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] Map list name", MCMaplist.Name.GetType(), MCMaplist.Name));
                 if (this.m_enEnableServerName == enumBoolYesNo.Yes)
                 {
-                    this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] Server name for this map list", MCMaplist.ServerName.GetType(), MCMaplist.ServerName));
+                    this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] Server name for this map list", MCMaplist.ServerName.GetType(), MCMaplist.ServerName));
                 }
-                this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] Minimum number of players", MCMaplist.MinPlayers.GetType(), MCMaplist.MinPlayers));
-                this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] Maximum number of players", MCMaplist.MaxPlayers.GetType(), MCMaplist.MaxPlayers));
+                this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] Minimum number of players", MCMaplist.MinPlayers.GetType(), MCMaplist.MinPlayers));
+                this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] Maximum number of players", MCMaplist.MaxPlayers.GetType(), MCMaplist.MaxPlayers));
                 if (this.m_enTimeOptions == enumBoolYesNo.Yes)
                 {
-                    this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] Days of week/month to use this map list", MCMaplist.DaysValid.GetType(), MCMaplist.DaysValid));
-                    this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] Time to start using this map list (24-hour format)", MCMaplist.TimeStart.GetType(), MCMaplist.TimeStart));
-                    this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] Time to stop using this map list (24-hour format)", MCMaplist.TimeStop.GetType(), MCMaplist.TimeStop));
+                    this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] Days of week/month to use this map list", MCMaplist.DaysValid.GetType(), MCMaplist.DaysValid));
+                    this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] Time to start using this map list (24-hour format)", MCMaplist.TimeStart.GetType(), MCMaplist.TimeStart));
+                    this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] Time to stop using this map list (24-hour format)", MCMaplist.TimeStop.GetType(), MCMaplist.TimeStop));
                 }
-                this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] List start/random preference", "enum.MapRandomization(Start with first map|Start with first map unless it was just played|Start with map after the map that was just played|Start with same map that was just played|Start with random map|Randomize entire map list)", MCMaplist.MapListStart));
-                this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] Minimum number of rounds to be played", MCMaplist.MinRounds.GetType(), MCMaplist.MinRounds));
-                this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|-------------------------", typeof(string), ""));
+                this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] List start/random preference", "enum.MapRandomization(Start with first map|Start with first map unless it was just played|Start with map after the map that was just played|Start with same map that was just played|Start with random map|Randomize entire map list)", MCMaplist.MapListStart));
+                this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] Minimum number of rounds to be played", MCMaplist.MinRounds.GetType(), MCMaplist.MinRounds));
+                this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|-------------------------", typeof(String), ""));
                 foreach (MaplistConfig.MaplistInfo MEMap in MCMaplist.Maplist)
                 {
-                    this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] ["+MEMap.Index+"] Game Mode", "enum.GameModes(" + String.Join("|", this.GetMapList("{GameMode}").ToArray()) + ")", MEMap.PublicGamemode));
-                    List<string> LPublicGameModes = new List<string>();
+                    this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] [" + MEMap.Index + "] Game Mode", "enum.GameModes(" + String.Join("|", this.GetMapList("{GameMode}").ToArray()) + ")", MEMap.PublicGamemode));
+                    List<String> LPublicGameModes = new List<String>();
                     foreach (CMap map in this.GetMapDefines())
                     {
                         if (MEMap.PublicGamemode == map.GameMode)
@@ -867,29 +889,30 @@ namespace PRoConEvents {
                             LPublicGameModes.Add(map.PublicLevelName);
                         }
                     }
-                    this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] ["+MEMap.Index+"] Map Name", "enum.Maps" + MEMap.PublicGamemode.Replace(" ", "") +"(" + String.Join("|", LPublicGameModes.ToArray()) + ")", this.GetMapByFilename(MEMap.MapFileName).PublicLevelName));
-                    this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] ["+MEMap.Index+"] Rounds", MEMap.Rounds.GetType(), MEMap.Rounds));
+                    this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] [" + MEMap.Index + "] Map Name", "enum.Maps" + MEMap.PublicGamemode.Replace(" ", "") + "(" + String.Join("|", LPublicGameModes.ToArray()) + ")", this.GetMapByFilename(MEMap.MapFileName).PublicLevelName));
+                    this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] [" + MEMap.Index + "] Rounds", MEMap.Rounds.GetType(), MEMap.Rounds));
                     if (this.m_enAllowPresets == enumBoolYesNo.Yes)
                     {
-                        List<string> presetList = new List<string>(this.m_DPreset.Keys);
-                        this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] ["+MEMap.Index+"] Preset", "enum.Presets" + String.Join("", presetList.ToArray()).Replace(" ", "") + "(" + String.Join("|", presetList.ToArray()) + ")", MEMap.Preset));
-                        if (this.m_enLoadPresets == enumBoolYesNo.Yes) {
-                            this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] ["+MEMap.Index+"] Preset (after level loads)", "enum.LoadPresets" + String.Join("", presetList.ToArray()).Replace(" ", "") + "(None|" + String.Join("|", presetList.ToArray()) + ")", MEMap.LoadPreset));
+                        List<String> presetList = new List<String>(this.m_DPreset.Keys);
+                        this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] [" + MEMap.Index + "] Preset", "enum.Presets" + String.Join("", presetList.ToArray()).Replace(" ", "") + "(" + String.Join("|", presetList.ToArray()) + ")", MEMap.Preset));
+                        if (this.m_enLoadPresets == enumBoolYesNo.Yes)
+                        {
+                            this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] [" + MEMap.Index + "] Preset (after level loads)", "enum.LoadPresets" + String.Join("", presetList.ToArray()).Replace(" ", "") + "(None|" + String.Join("|", presetList.ToArray()) + ")", MEMap.LoadPreset));
                         }
                     }
-                    this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] ["+MEMap.Index+"] Manage Map", "enum.ManageMap(...|Move Up|Move Down|-----|Remove Map)", "..."));
-                this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|-------------------------", typeof(string), ""));
+                    this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] [" + MEMap.Index + "] Manage Map", "enum.ManageMap(...|Move Up|Move Down|-----|Remove Map)", "..."));
+                    this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|-------------------------", typeof(String), ""));
                 }
-                this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] Add a new map?", "enum.AddNewMap(...|Add 1 new map|Add 2 new maps|Add 3 new maps|Add 4 new maps|Add 5 new maps|Add 6 new maps|Add 7 new maps|Add 8 new maps|-----)", "..."));
-                this.m_LGDPVList.Add(new CPluginVariable("Map List "+MCMaplist.Index+" ["+MCMaplist.Name+"]|["+MCMaplist.Index+"] Manage Map List", "enum.ManageList(...|Move Up|Move Down|-----|Remove Entire Map List)", "..."));
+                this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] Add a new map?", "enum.AddNewMap(...|Add 1 new map|Add 2 new maps|Add 3 new maps|Add 4 new maps|Add 5 new maps|Add 6 new maps|Add 7 new maps|Add 8 new maps|-----)", "..."));
+                this.m_LGDPVList.Add(new CPluginVariable("Map List " + MCMaplist.Index + " [" + MCMaplist.Name + "]|[" + MCMaplist.Index + "] Manage Map List", "enum.ManageList(...|Move Up|Move Down|-----|Remove Entire Map List)", "..."));
             }
             if (this.m_enAllowPresets == enumBoolYesNo.Yes)
             {
-                List<string> deleteList = new List<string>();
-                foreach (KeyValuePair<string, string[]> preset in this.m_DPreset)
+                List<String> deleteList = new List<String>();
+                foreach (KeyValuePair<String, String[]> preset in this.m_DPreset)
                 {
-                    string viewMessage = "";
-                    if (new List<string>(new string[] {"Normal", "Hardcore", "Infantry Only"}).Contains(preset.Key))
+                    String viewMessage = "";
+                    if (new List<String>(new String[] { "Normal", "Hardcore", "Infantry Only" }).Contains(preset.Key))
                     {
                         viewMessage = " (view only)";
                     }
@@ -897,7 +920,7 @@ namespace PRoConEvents {
                     {
                         deleteList.Add("|Remove " + preset.Key);
                     }
-                    this.m_LGDPVList.Add(new CPluginVariable("Presets|"+preset.Key+viewMessage, preset.Value.GetType(), preset.Value));
+                    this.m_LGDPVList.Add(new CPluginVariable("Presets|" + preset.Key + viewMessage, preset.Value.GetType(), preset.Value));
                 }
                 this.m_LGDPVList.Add(new CPluginVariable("Presets|Manage Presets", "enum.ManagePresets" + String.Join("", deleteList.ToArray()).Replace(" ", "") + "(...|Add custom preset based on Normal|Add custom preset based on Hardcore|Add custom preset based on Infantry Only" + String.Join("", deleteList.ToArray()) + ")", "..."));
             }
@@ -907,7 +930,8 @@ namespace PRoConEvents {
         }
 
         // Lists all of the plugin variables.
-        public List<CPluginVariable> GetPluginVariables() {
+        public List<CPluginVariable> GetPluginVariables()
+        {
             if (this.m_LGPVList.Count != 0)
             {
                 return this.m_LGPVList;
@@ -925,36 +949,36 @@ namespace PRoConEvents {
             this.m_LGPVList.Add(new CPluginVariable("Enable day/time-dependent map lists?", typeof(enumBoolYesNo), this.m_enTimeOptions));
             this.m_LGPVList.Add(new CPluginVariable("    Ignore 'Switch to new map list immediately' setting for time-based changes?", typeof(enumBoolYesNo), this.m_enTimeNotNow));
             this.m_LGPVList.Add(new CPluginVariable("    Use system/layer server time zone?", typeof(enumBoolYesNo), this.m_enUseSystemTZ));
-            this.m_LGPVList.Add(new CPluginVariable("        Time Zone used to determine current time", typeof(string), "CONFIG:"+this.m_strTimeZone.Replace("+", "%2B")));
+            this.m_LGPVList.Add(new CPluginVariable("        Time Zone used to determine current time", typeof(String), "CONFIG:" + this.m_strTimeZone.Replace("+", "%2B")));
             this.m_LGPVList.Add(new CPluginVariable("Allow map-specific game presets?", typeof(enumBoolYesNo), this.m_enAllowPresets));
             this.m_LGPVList.Add(new CPluginVariable("    Send preset commands after every round?", typeof(enumBoolYesNo), this.m_enPresetsAlways));
             this.m_LGPVList.Add(new CPluginVariable("    Allow additional presets to be sent after each level loads?", typeof(enumBoolYesNo), this.m_enLoadPresets));
-            foreach (KeyValuePair<string, string[]> preset in this.m_DPreset)
+            foreach (KeyValuePair<String, String[]> preset in this.m_DPreset)
             {
-                if (!(new List<string>(new string[] {"Normal", "Hardcore", "Infantry Only"}).Contains(preset.Key)))
+                if (!(new List<String>(new String[] { "Normal", "Hardcore", "Infantry Only" }).Contains(preset.Key)))
                 {
                     this.m_LGPVList.Add(new CPluginVariable(preset.Key, preset.Value.GetType(), preset.Value));
                 }
             }
             foreach (MaplistConfig MCMaplist in this.m_LMaplists)
             {
-                this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] Enable this map list?", typeof(string), "CONFIG:"+MCMaplist.Enabled));
-                this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] Map list name", MCMaplist.Name.GetType(), "CONFIG:"+MCMaplist.Name));
-                this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] Server name for this map list", MCMaplist.ServerName.GetType(), "CONFIG:"+MCMaplist.ServerName));
-                this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] Minimum number of players", typeof(string), "CONFIG:"+MCMaplist.MinPlayers));
-                this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] Maximum number of players", typeof(string), "CONFIG:"+MCMaplist.MaxPlayers));
-                this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] Days of week/month to use this map list", typeof(string), "CONFIG:"+CPluginVariable.EncodeStringArray(MCMaplist.DaysValid)));
-                this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] Time to start using this map list (24-hour format)", MCMaplist.TimeStart.GetType(), "CONFIG:"+MCMaplist.TimeStart));
-                this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] Time to stop using this map list (24-hour format)", MCMaplist.TimeStop.GetType(), "CONFIG:"+MCMaplist.TimeStop));
-                this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] List start/random preference", typeof(string), "CONFIG:"+MCMaplist.MapListStart));
-                this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] Minimum number of rounds to be played", typeof(string), "CONFIG:"+MCMaplist.MinRounds));
+                this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] Enable this map list?", typeof(String), "CONFIG:" + MCMaplist.Enabled));
+                this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] Map list name", MCMaplist.Name.GetType(), "CONFIG:" + MCMaplist.Name));
+                this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] Server name for this map list", MCMaplist.ServerName.GetType(), "CONFIG:" + MCMaplist.ServerName));
+                this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] Minimum number of players", typeof(String), "CONFIG:" + MCMaplist.MinPlayers));
+                this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] Maximum number of players", typeof(String), "CONFIG:" + MCMaplist.MaxPlayers));
+                this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] Days of week/month to use this map list", typeof(String), "CONFIG:" + CPluginVariable.EncodeStringArray(MCMaplist.DaysValid)));
+                this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] Time to start using this map list (24-hour format)", MCMaplist.TimeStart.GetType(), "CONFIG:" + MCMaplist.TimeStart));
+                this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] Time to stop using this map list (24-hour format)", MCMaplist.TimeStop.GetType(), "CONFIG:" + MCMaplist.TimeStop));
+                this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] List start/random preference", typeof(String), "CONFIG:" + MCMaplist.MapListStart));
+                this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] Minimum number of rounds to be played", typeof(String), "CONFIG:" + MCMaplist.MinRounds));
                 foreach (MaplistConfig.MaplistInfo MEMap in MCMaplist.Maplist)
                 {
-                    this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] ["+MEMap.Index+"] Game Mode", MEMap.Gamemode.GetType(), "CONFIG:"+MEMap.Gamemode));
-                    this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] ["+MEMap.Index+"] Map Name", MEMap.MapFileName.GetType(), "CONFIG:"+MEMap.MapFileName));
-                    this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] ["+MEMap.Index+"] Rounds", typeof(string), "CONFIG:"+MEMap.Rounds));
-                    this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] ["+MEMap.Index+"] Preset", MEMap.Preset.GetType(), "CONFIG:"+MEMap.Preset));
-                    this.m_LGPVList.Add(new CPluginVariable("["+MCMaplist.Index+"] ["+MEMap.Index+"] Preset (after level loads)", MEMap.LoadPreset.GetType(), "CONFIG:"+MEMap.LoadPreset));
+                    this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] [" + MEMap.Index + "] Game Mode", MEMap.Gamemode.GetType(), "CONFIG:" + MEMap.Gamemode));
+                    this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] [" + MEMap.Index + "] Map Name", MEMap.MapFileName.GetType(), "CONFIG:" + MEMap.MapFileName));
+                    this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] [" + MEMap.Index + "] Rounds", typeof(String), "CONFIG:" + MEMap.Rounds));
+                    this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] [" + MEMap.Index + "] Preset", MEMap.Preset.GetType(), "CONFIG:" + MEMap.Preset));
+                    this.m_LGPVList.Add(new CPluginVariable("[" + MCMaplist.Index + "] [" + MEMap.Index + "] Preset (after level loads)", MEMap.LoadPreset.GetType(), "CONFIG:" + MEMap.LoadPreset));
                 }
             }
             this.m_LGPVList.Add(new CPluginVariable("Enable debug output?", typeof(enumBoolYesNo), this.m_enDoDebugOutput));
@@ -962,18 +986,19 @@ namespace PRoConEvents {
             return this.m_LGPVList;
         }
 
-        private void UpdateVariableLists (string strVariableName, object objValue, object objDisplayValue, string strDisplayType, string strCommand) {
+        private void UpdateVariableLists(String strVariableName, Object objValue, Object objDisplayValue, String strDisplayType, String strCommand)
+        {
             foreach (CPluginVariable variable in this.m_LGPVList)
             {
                 if (variable.Name.CompareTo(strVariableName) == 0)
                 {
-                    int index = this.m_LGPVList.IndexOf(variable);
+                    Int32 index = this.m_LGPVList.IndexOf(variable);
                     this.m_LGPVList.RemoveAt(index);
                     if (strCommand.CompareTo("delete") != 0)
                     {
                         if (objValue.ToString().CompareTo("System.String[]") == 0)
                         {
-                            objValue = CPluginVariable.EncodeStringArray((string[])objValue);
+                            objValue = CPluginVariable.EncodeStringArray((String[])objValue);
                         }
                         this.m_LGPVList.Insert(index, new CPluginVariable(variable.Name, variable.Type, "CONFIG:" + objValue.ToString()));
                     }
@@ -982,15 +1007,15 @@ namespace PRoConEvents {
             }
             foreach (CPluginVariable variable in this.m_LGDPVList)
             {
-                if (variable.Name.Substring(variable.Name.IndexOf("|")+1).CompareTo(strVariableName) == 0)
+                if (variable.Name.Substring(variable.Name.IndexOf("|") + 1).CompareTo(strVariableName) == 0)
                 {
-                    int index = this.m_LGDPVList.IndexOf(variable);
+                    Int32 index = this.m_LGDPVList.IndexOf(variable);
                     this.m_LGDPVList.RemoveAt(index);
                     if (strCommand.CompareTo("delete") != 0)
                     {
                         if (variable.Type.CompareTo("stringarray") == 0)
                         {
-                            objDisplayValue = CPluginVariable.EncodeStringArray((string[])objDisplayValue);
+                            objDisplayValue = CPluginVariable.EncodeStringArray((String[])objDisplayValue);
                         }
                         if (strDisplayType.CompareTo("") == 0)
                         {
@@ -1006,7 +1031,8 @@ namespace PRoConEvents {
             }
         }
 
-        private void UpdateVariableLists (string strVariableName, object objValue) {
+        private void UpdateVariableLists(String strVariableName, Object objValue)
+        {
             if (objValue.ToString().CompareTo("delete") == 0)
             {
                 UpdateVariableLists(strVariableName, "", "", "", "delete");
@@ -1017,27 +1043,29 @@ namespace PRoConEvents {
             }
         }
 
-        private void UpdateVariableLists (string strVariableName, object objValue, object objDisplayValue) {
+        private void UpdateVariableLists(String strVariableName, Object objValue, Object objDisplayValue)
+        {
             UpdateVariableLists(strVariableName, objValue, objDisplayValue, "", "update");
         }
 
-        private void UpdateVariableLists (string strVariableName, object objValue, object objDisplayValue, string strDisplayType) {
+        private void UpdateVariableLists(String strVariableName, Object objValue, Object objDisplayValue, String strDisplayType)
+        {
             UpdateVariableLists(strVariableName, objValue, objDisplayValue, strDisplayType, "update");
         }
 
         // Allways be suspicious of strValue's actual value.  A command in the console can
         // by the user can put any kind of data it wants in strValue.
         // use type.TryParse
-        public void SetPluginVariable(string strVariable, string strValue)
+        public void SetPluginVariable(String strVariable, String strValue)
         {
-            int iValue = 0;
-            bool loadedFromConfig = false;
-			this.UnregisterAllCommands();
+            Int32 iValue = 0;
+            Boolean loadedFromConfig = false;
+            this.UnregisterAllCommands();
 
             if (strValue.StartsWith("CONFIG:"))
             {
-               loadedFromConfig = true; 
-               strValue = strValue.Replace("CONFIG:", "");
+                loadedFromConfig = true;
+                strValue = strValue.Replace("CONFIG:", "");
             }
 
             if (strVariable.CompareTo("Enable map list manager?") == 0 && Enum.IsDefined(typeof(enumBoolYesNo), strValue) == true)
@@ -1062,12 +1090,12 @@ namespace PRoConEvents {
                 }
                 this.m_LGDPVList = new List<CPluginVariable>();
             }
-            else if (strVariable.CompareTo("    Do not switch if more than this number of players are online") == 0 && int.TryParse(strValue, out iValue) == true)
-			{
-				if (iValue < 0)
-				{
-					iValue = 0;
-				}
+            else if (strVariable.CompareTo("    Do not switch if more than this number of players are online") == 0 && Int32.TryParse(strValue, out iValue) == true)
+            {
+                if (iValue < 0)
+                {
+                    iValue = 0;
+                }
                 else if (iValue > 69 && (this.m_strServerGameType == "bf4" || this.m_strServerGameType == "bfhl"))
                 {
                     iValue = 69;
@@ -1077,9 +1105,9 @@ namespace PRoConEvents {
                     iValue = 63;
                 }
 
-				this.m_iRestartLimit = iValue;
+                this.m_iRestartLimit = iValue;
                 UpdateVariableLists(strVariable, this.m_iRestartLimit);
-			}
+            }
             else if (strVariable.CompareTo("    Warn (yell at) players before switching?") == 0 && Enum.IsDefined(typeof(enumBoolYesNo), strValue) == true)
             {
                 this.m_enRestartWarning = (enumBoolYesNo)Enum.Parse(typeof(enumBoolYesNo), strValue);
@@ -1094,20 +1122,20 @@ namespace PRoConEvents {
                     UpdateVariableLists("        Warning message (use [listname] for map list name and [secs] for seconds)", "delete");
                 }
             }
-            else if (strVariable.CompareTo("        Number of seconds to display warning") == 0 && int.TryParse(strValue, out iValue) == true)
-			{
-				this.m_enRestartWarningTime = iValue;
-				
-				if (iValue < 0)
-				{
-					this.m_enRestartWarningTime = 0;
-				}
-				else if (iValue > 30)
-				{
-					this.m_enRestartWarningTime = 30;
-				}
+            else if (strVariable.CompareTo("        Number of seconds to display warning") == 0 && Int32.TryParse(strValue, out iValue) == true)
+            {
+                this.m_enRestartWarningTime = iValue;
+
+                if (iValue < 0)
+                {
+                    this.m_enRestartWarningTime = 0;
+                }
+                else if (iValue > 30)
+                {
+                    this.m_enRestartWarningTime = 30;
+                }
                 UpdateVariableLists(strVariable, this.m_enRestartWarningTime);
-			}
+            }
             else if (strVariable.CompareTo("        Warning message (use [listname] for map list name and [secs] for seconds)") == 0)
             {
                 this.m_strRestartWarningMessage = strValue;
@@ -1174,7 +1202,7 @@ namespace PRoConEvents {
                     WritePluginConsole("INFO -> Current day/time on this system: " + newtime.ToString("dddd") + ", " + newtime.ToString("t"));
                 }
             }
-            else if (strVariable.CompareTo("        Time Zone used to determine current time") == 0 && ((IList<string>)TimeZoneInformation.TimeZoneNames).Contains(strValue))
+            else if (strVariable.CompareTo("        Time Zone used to determine current time") == 0 && ((IList<String>)TimeZoneInformation.TimeZoneNames).Contains(strValue))
             {
                 this.m_strTimeZone = strValue;
                 UpdateVariableLists(strVariable, this.m_strTimeZone.Replace("+", "%2B"), this.m_strTimeZone);
@@ -1192,13 +1220,13 @@ namespace PRoConEvents {
             }
             else if (strVariable.Length > 13 && strVariable.Substring(0, 13).CompareTo("Custom Preset") == 0)
             {
-                string newName = strVariable;
-                string[] presetVars = CPluginVariable.DecodeStringArray(strValue);
+                String newName = strVariable;
+                String[] presetVars = CPluginVariable.DecodeStringArray(strValue);
                 if (presetVars[0].Length > 17 && presetVars[0].Substring(0, 17).CompareTo("# Custom Preset: ") == 0)
                 {
                     newName = presetVars[0].Substring(2);
                 }
-                for (int i=0; i < presetVars.Length; i++)
+                for (Int32 i = 0; i < presetVars.Length; i++)
                 {
                     presetVars[i] = presetVars[i].Replace("|", "-");
                 }
@@ -1230,10 +1258,11 @@ namespace PRoConEvents {
             {
                 if (strValue.Length > 26 && strValue.Substring(0, 26).CompareTo("Add custom preset based on") == 0)
                 {
-                    List<string> newPreset = new List<string>(this.m_DPreset[strValue.Substring(27)]);
-                    for (int i = 1; true; i++)
+                    List<String> newPreset = new List<String>(this.m_DPreset[strValue.Substring(27)]);
+                    for (Int32 i = 1; true; i++)
                     {
-                        if (!this.m_DPreset.ContainsKey("Custom Preset: " + strValue.Substring(27) + " " + i)) {
+                        if (!this.m_DPreset.ContainsKey("Custom Preset: " + strValue.Substring(27) + " " + i))
+                        {
                             newPreset.Insert(0, "# Custom Preset: " + strValue.Substring(27) + " " + i);
                             this.m_DPreset.Add("Custom Preset: " + strValue.Substring(27) + " " + i, newPreset.ToArray());
                             break;
@@ -1245,10 +1274,10 @@ namespace PRoConEvents {
                 else if (strValue.Length > 6 && strValue.Substring(0, 6).CompareTo("Remove") == 0)
                 {
                     this.m_DPreset.Remove(strValue.Substring(7));
-                    List<string> deleteList = new List<string>();
-                    foreach (KeyValuePair<string, string[]> preset in this.m_DPreset)
+                    List<String> deleteList = new List<String>();
+                    foreach (KeyValuePair<String, String[]> preset in this.m_DPreset)
                     {
-                        if (!(new List<string>(new string[] {"Normal", "Hardcore", "Infantry Only"}).Contains(preset.Key)))
+                        if (!(new List<String>(new String[] { "Normal", "Hardcore", "Infantry Only" }).Contains(preset.Key)))
                         {
                             deleteList.Add("|Remove " + preset.Key);
                         }
@@ -1279,17 +1308,24 @@ namespace PRoConEvents {
                 {
                     if (strValue.CompareTo("Create an empty map list") == 0)
                     {
-                        int i = this.m_LMaplists.Count;
+                        Int32 i = this.m_LMaplists.Count;
                         this.m_LMaplists.Add(new MaplistConfig(i));
                         this.m_LMaplists[i].Name = "New Map List";
                         this.m_LMaplists[i].ServerName = this.m_strCurrentServerName.Replace("+", "%2B");
-                        if (this.m_strServerGameType == "bf3") {
+                        if (this.m_strServerGameType == "bf3")
+                        {
                             this.m_LMaplists[i].Maplist.Add(new MaplistConfig.MaplistInfo(0));
-                        } else if (this.m_strServerGameType == "mohw") {
+                        }
+                        else if (this.m_strServerGameType == "mohw")
+                        {
                             this.m_LMaplists[i].Maplist.Add(new MaplistConfig.MaplistInfo("CombatMission", "CombatMission", "MP_03", 2, 0));
-                        } else if (this.m_strServerGameType == "bf4") {
+                        }
+                        else if (this.m_strServerGameType == "bf4")
+                        {
                             this.m_LMaplists[i].Maplist.Add(new MaplistConfig.MaplistInfo("ConquestLarge0", "Conquest Large", "MP_Abandoned", 2, 0));
-                        } else if (this.m_strServerGameType == "bfhl") {
+                        }
+                        else if (this.m_strServerGameType == "bfhl")
+                        {
                             this.m_LMaplists[i].Maplist.Add(new MaplistConfig.MaplistInfo("TurfWarLarge0", "Conquest Large", "MP_Downtown", 2, 0));
                         }
                         this.m_LGDPVList = new List<CPluginVariable>();
@@ -1307,13 +1343,13 @@ namespace PRoConEvents {
                         }
                         else
                         {
-                            int i = this.m_LMaplists.Count;
+                            Int32 i = this.m_LMaplists.Count;
                             this.m_LMaplists.Add(new MaplistConfig(i));
                             this.m_LMaplists[i].Name = "New Map List";
                             this.m_LMaplists[i].ServerName = this.m_strCurrentServerName.Replace("+", "%2B");
                             foreach (MaplistEntry MEMap in this.m_LCurrentMapList)
                             {
-                                string strPublicGameMode = "";
+                                String strPublicGameMode = "";
                                 foreach (CMap map in this.GetMapDefines())
                                 {
                                     if (MEMap.Gamemode.ToLower() == map.PlayList.ToLower() && MEMap.MapFileName.ToLower() == map.FileName.ToLower())
@@ -1330,9 +1366,9 @@ namespace PRoConEvents {
                         }
                     }
                 }
-                else if (strVariable.Length > 21 && strVariable.Substring(strVariable.Length-21).CompareTo("Enable this map list?") == 0 && Enum.IsDefined(typeof(enumBoolYesNo), strValue) == true)
+                else if (strVariable.Length > 21 && strVariable.Substring(strVariable.Length - 21).CompareTo("Enable this map list?") == 0 && Enum.IsDefined(typeof(enumBoolYesNo), strValue) == true)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
                     // Add construct on initial load; versions 1.1.0.2+
                     if (this.m_LMaplists.Count == i)
                     {
@@ -1341,16 +1377,16 @@ namespace PRoConEvents {
                     this.m_LMaplists[i].Enabled = (enumBoolYesNo)Enum.Parse(typeof(enumBoolYesNo), strValue);
                     UpdateVariableLists(strVariable, this.m_LMaplists[i].Enabled);
                 }
-                else if (strVariable.Length > 13 && strVariable.Substring(strVariable.Length-13).CompareTo("Map list name") == 0)
+                else if (strVariable.Length > 13 && strVariable.Substring(strVariable.Length - 13).CompareTo("Map list name") == 0)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
                     this.m_LMaplists[i].Name = strValue.Substring(0, Math.Min(strValue.Length, 63)).Replace("+", "%2B").Replace("|", "-");
                     this.m_LGDPVList = new List<CPluginVariable>();
                     this.m_LGPVList = new List<CPluginVariable>();
                 }
-                else if (strVariable.Length > 29 && strVariable.Substring(strVariable.Length-29).CompareTo("Server name for this map list") == 0)
+                else if (strVariable.Length > 29 && strVariable.Substring(strVariable.Length - 29).CompareTo("Server name for this map list") == 0)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
                     // Add construct on initial load; versions 1.1.0.2 and before
                     if (this.m_LMaplists.Count == i)
                     {
@@ -1359,19 +1395,19 @@ namespace PRoConEvents {
                     this.m_LMaplists[i].ServerName = strValue.Substring(0, Math.Min(strValue.Length, 63)).Replace("+", "%2B");
                     UpdateVariableLists(strVariable, this.m_LMaplists[i].ServerName);
                 }
-                else if (strVariable.Length > 39 && strVariable.Substring(strVariable.Length-39).CompareTo("Days of week/month to use this map list") == 0)
+                else if (strVariable.Length > 39 && strVariable.Substring(strVariable.Length - 39).CompareTo("Days of week/month to use this map list") == 0)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
 
                     this.m_LMaplists[i].DaysValid = CPluginVariable.DecodeStringArray(strValue);
                     UpdateVariableLists(strVariable, this.m_LMaplists[i].DaysValid);
                 }
-                else if (strVariable.Length > 50 && strVariable.Substring(strVariable.Length-50).CompareTo("Time to start using this map list (24-hour format)") == 0)
+                else if (strVariable.Length > 50 && strVariable.Substring(strVariable.Length - 50).CompareTo("Time to start using this map list (24-hour format)") == 0)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
 
-                    string time = "0:00";
-                    if (int.TryParse(strValue, out iValue) == true)
+                    String time = "0:00";
+                    if (Int32.TryParse(strValue, out iValue) == true)
                     {
                         if (iValue < 24 && iValue >= 0)
                         {
@@ -1380,7 +1416,7 @@ namespace PRoConEvents {
                     }
                     else if (strValue.Length <= 5 && strValue.IndexOf(':') != -1)
                     {
-                        string[] parts = strValue.Split(':');
+                        String[] parts = strValue.Split(':');
                         if (parts.Length == 2 && parts[0].Length <= 2 && parts[1].Length <= 2 && Int32.Parse(parts[0]) < 24 && Int32.Parse(parts[0]) >= 0 && Int32.Parse(parts[1]) < 60 && Int32.Parse(parts[1]) >= 0)
                         {
                             time = strValue;
@@ -1389,12 +1425,12 @@ namespace PRoConEvents {
                     this.m_LMaplists[i].TimeStart = time;
                     UpdateVariableLists(strVariable, time);
                 }
-                else if (strVariable.Length > 49 && strVariable.Substring(strVariable.Length-49).CompareTo("Time to stop using this map list (24-hour format)") == 0)
+                else if (strVariable.Length > 49 && strVariable.Substring(strVariable.Length - 49).CompareTo("Time to stop using this map list (24-hour format)") == 0)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
 
-                    string time = "23:59";
-                    if (int.TryParse(strValue, out iValue) == true)
+                    String time = "23:59";
+                    if (Int32.TryParse(strValue, out iValue) == true)
                     {
                         if (iValue < 24 && iValue >= 0)
                         {
@@ -1403,7 +1439,7 @@ namespace PRoConEvents {
                     }
                     else if (strValue.Length <= 5 && strValue.IndexOf(':') != -1)
                     {
-                        string[] parts = strValue.Split(':');
+                        String[] parts = strValue.Split(':');
                         if (parts.Length == 2 && parts[0].Length <= 2 && parts[1].Length <= 2 && Int32.Parse(parts[0]) < 24 && Int32.Parse(parts[0]) >= 0 && Int32.Parse(parts[1]) < 60 && Int32.Parse(parts[1]) >= 0)
                         {
                             time = strValue;
@@ -1412,9 +1448,9 @@ namespace PRoConEvents {
                     this.m_LMaplists[i].TimeStop = time;
                     UpdateVariableLists(strVariable, time);
                 }
-                else if (strVariable.Length > 25 && strVariable.Substring(strVariable.Length-25).CompareTo("Minimum number of players") == 0 && int.TryParse(strValue, out iValue) == true)
+                else if (strVariable.Length > 25 && strVariable.Substring(strVariable.Length - 25).CompareTo("Minimum number of players") == 0 && Int32.TryParse(strValue, out iValue) == true)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
 
                     if (iValue < 0)
                     {
@@ -1427,9 +1463,9 @@ namespace PRoConEvents {
                     this.m_LMaplists[i].MinPlayers = iValue;
                     UpdateVariableLists(strVariable, iValue);
                 }
-                else if (strVariable.Length > 25 && strVariable.Substring(strVariable.Length-25).CompareTo("Maximum number of players") == 0 && int.TryParse(strValue, out iValue) == true)
+                else if (strVariable.Length > 25 && strVariable.Substring(strVariable.Length - 25).CompareTo("Maximum number of players") == 0 && Int32.TryParse(strValue, out iValue) == true)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
 
                     if (iValue < 0)
                     {
@@ -1442,21 +1478,21 @@ namespace PRoConEvents {
                     this.m_LMaplists[i].MaxPlayers = iValue;
                     UpdateVariableLists(strVariable, iValue);
                 }
-                else if (strVariable.Length > 22 && strVariable.Substring(strVariable.Length-22).CompareTo("Start with random map?") == 0 && Enum.IsDefined(typeof(enumBoolYesNo), strValue) == true)
+                else if (strVariable.Length > 22 && strVariable.Substring(strVariable.Length - 22).CompareTo("Start with random map?") == 0 && Enum.IsDefined(typeof(enumBoolYesNo), strValue) == true)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
                     this.m_LMaplists[i].MapListStart = "Start with random map";
                     UpdateVariableLists(strVariable, this.m_LMaplists[i].MapListStart);
                 }
-                else if (strVariable.Length > 28 && strVariable.Substring(strVariable.Length-28).CompareTo("List start/random preference") == 0)
+                else if (strVariable.Length > 28 && strVariable.Substring(strVariable.Length - 28).CompareTo("List start/random preference") == 0)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
                     this.m_LMaplists[i].MapListStart = strValue;
                     UpdateVariableLists(strVariable, this.m_LMaplists[i].MapListStart);
                 }
-                else if (strVariable.Length > 37 && strVariable.Substring(strVariable.Length-37).CompareTo("Minimum number of rounds to be played") == 0 && int.TryParse(strValue, out iValue) == true)
+                else if (strVariable.Length > 37 && strVariable.Substring(strVariable.Length - 37).CompareTo("Minimum number of rounds to be played") == 0 && Int32.TryParse(strValue, out iValue) == true)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
 
                     if (iValue < 0)
                     {
@@ -1465,33 +1501,33 @@ namespace PRoConEvents {
                     this.m_LMaplists[i].MinRounds = iValue;
                     UpdateVariableLists(strVariable, iValue);
                 }
-                else if (strVariable.Length > 14 && strVariable.Substring(strVariable.Length-14).CompareTo("Add a new map?") == 0 && strValue.CompareTo("...") != 0)
+                else if (strVariable.Length > 14 && strVariable.Substring(strVariable.Length - 14).CompareTo("Add a new map?") == 0 && strValue.CompareTo("...") != 0)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
-                    for (int j = 0; j < int.Parse(strValue.Substring(4, 1)); j++)
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
+                    for (Int32 j = 0; j < Int32.Parse(strValue.Substring(4, 1)); j++)
                     {
-                        this.m_LMaplists[i].Maplist.Add(new MaplistConfig.MaplistInfo(this.m_LMaplists[i].Maplist[this.m_LMaplists[i].Maplist.Count-1].Gamemode, this.m_LMaplists[i].Maplist[this.m_LMaplists[i].Maplist.Count-1].PublicGamemode, this.m_LMaplists[i].Maplist[this.m_LMaplists[i].Maplist.Count-1].MapFileName, this.m_LMaplists[i].Maplist[this.m_LMaplists[i].Maplist.Count-1].Rounds, this.m_LMaplists[i].Maplist.Count));
+                        this.m_LMaplists[i].Maplist.Add(new MaplistConfig.MaplistInfo(this.m_LMaplists[i].Maplist[this.m_LMaplists[i].Maplist.Count - 1].Gamemode, this.m_LMaplists[i].Maplist[this.m_LMaplists[i].Maplist.Count - 1].PublicGamemode, this.m_LMaplists[i].Maplist[this.m_LMaplists[i].Maplist.Count - 1].MapFileName, this.m_LMaplists[i].Maplist[this.m_LMaplists[i].Maplist.Count - 1].Rounds, this.m_LMaplists[i].Maplist.Count));
                     }
                     this.m_LGDPVList = new List<CPluginVariable>();
                     this.m_LGPVList = new List<CPluginVariable>();
                 }
-                else if (strVariable.Length > 15 && strVariable.Substring(strVariable.Length-15).CompareTo("Manage Map List") == 0)
+                else if (strVariable.Length > 15 && strVariable.Substring(strVariable.Length - 15).CompareTo("Manage Map List") == 0)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
                     if (strValue.CompareTo("Move Up") == 0 && i > 0)
                     {
-                        this.m_LMaplists.Insert(i-1, this.m_LMaplists[i]);
-                        this.m_LMaplists.RemoveAt(i+1);
-                        for (int j = i-1; j < this.m_LMaplists.Count; j++)
+                        this.m_LMaplists.Insert(i - 1, this.m_LMaplists[i]);
+                        this.m_LMaplists.RemoveAt(i + 1);
+                        for (Int32 j = i - 1; j < this.m_LMaplists.Count; j++)
                         {
                             this.m_LMaplists[j].Index = j;
                         }
                     }
                     if (strValue.CompareTo("Move Down") == 0 && i < this.m_LMaplists.Count - 1)
                     {
-                        this.m_LMaplists.Insert(i+2, this.m_LMaplists[i]);
+                        this.m_LMaplists.Insert(i + 2, this.m_LMaplists[i]);
                         this.m_LMaplists.RemoveAt(i);
-                        for (int j = i; j < this.m_LMaplists.Count; j++)
+                        for (Int32 j = i; j < this.m_LMaplists.Count; j++)
                         {
                             this.m_LMaplists[j].Index = j;
                         }
@@ -1499,7 +1535,7 @@ namespace PRoConEvents {
                     if (strValue.CompareTo("Remove Entire Map List") == 0)
                     {
                         this.m_LMaplists.RemoveAt(i);
-                        for (int j = i; j < this.m_LMaplists.Count; j++)
+                        for (Int32 j = i; j < this.m_LMaplists.Count; j++)
                         {
                             this.m_LMaplists[j].Index = j;
                         }
@@ -1507,10 +1543,10 @@ namespace PRoConEvents {
                     this.m_LGDPVList = new List<CPluginVariable>();
                     this.m_LGPVList = new List<CPluginVariable>();
                 }
-                else if (strVariable.Length > 9 && strVariable.Substring(strVariable.Length-9).CompareTo("Game Mode") == 0 && (this.GetMapByFormattedName("{GameMode}", strValue) != null || loadedFromConfig))
+                else if (strVariable.Length > 9 && strVariable.Substring(strVariable.Length - 9).CompareTo("Game Mode") == 0 && (this.GetMapByFormattedName("{GameMode}", strValue) != null || loadedFromConfig))
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
-                    int j = int.Parse(strVariable.Substring(strVariable.LastIndexOf("[")+1, strVariable.LastIndexOf("]")-strVariable.LastIndexOf("[")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
+                    Int32 j = Int32.Parse(strVariable.Substring(strVariable.LastIndexOf("[") + 1, strVariable.LastIndexOf("]") - strVariable.LastIndexOf("[") - 1));
                     // Add construct on initial load
                     if (this.m_LMaplists[i].Maplist.Count == j)
                     {
@@ -1524,7 +1560,7 @@ namespace PRoConEvents {
                     {
                         this.m_LMaplists[i].Maplist[j].PublicGamemode = strValue;
                         this.m_LMaplists[i].Maplist[j].Gamemode = this.GetMapByFormattedName("{GameMode}", strValue).PlayList;
-                        List<string> LAvailableMaps = new List<string>();
+                        List<String> LAvailableMaps = new List<String>();
                         foreach (CMap map in this.GetMapDefines())
                         {
                             if (strValue == map.GameMode)
@@ -1536,7 +1572,7 @@ namespace PRoConEvents {
                         {
                             this.m_LMaplists[i].Maplist[j].MapFileName = LAvailableMaps[0];
                         }
-                        List<string> LPublicGameModes = new List<string>();
+                        List<String> LPublicGameModes = new List<String>();
                         foreach (CMap map in this.GetMapDefines())
                         {
                             if (map.GameMode == strValue)
@@ -1545,17 +1581,17 @@ namespace PRoConEvents {
                             }
                         }
                         UpdateVariableLists(strVariable, this.m_LMaplists[i].Maplist[j].Gamemode, strValue);
-                        UpdateVariableLists("[" + i + "] [" + j + "] Map Name", this.m_LMaplists[i].Maplist[j].MapFileName, this.GetMapByFilename(this.m_LMaplists[i].Maplist[j].MapFileName).PublicLevelName, "enum.Maps" + strValue.Replace(" ", "") +"(" + String.Join("|", LPublicGameModes.ToArray()) + ")");
+                        UpdateVariableLists("[" + i + "] [" + j + "] Map Name", this.m_LMaplists[i].Maplist[j].MapFileName, this.GetMapByFilename(this.m_LMaplists[i].Maplist[j].MapFileName).PublicLevelName, "enum.Maps" + strValue.Replace(" ", "") + "(" + String.Join("|", LPublicGameModes.ToArray()) + ")");
                     }
                 }
-                else if (strVariable.Length > 8 && strVariable.Substring(strVariable.Length-8).CompareTo("Map Name") == 0 && (this.GetMapByFormattedName("{PublicLevelName}", strValue) != null || loadedFromConfig))
+                else if (strVariable.Length > 8 && strVariable.Substring(strVariable.Length - 8).CompareTo("Map Name") == 0 && (this.GetMapByFormattedName("{PublicLevelName}", strValue) != null || loadedFromConfig))
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
-                    int j = int.Parse(strVariable.Substring(strVariable.LastIndexOf("[")+1, strVariable.LastIndexOf("]")-strVariable.LastIndexOf("[")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
+                    Int32 j = Int32.Parse(strVariable.Substring(strVariable.LastIndexOf("[") + 1, strVariable.LastIndexOf("]") - strVariable.LastIndexOf("[") - 1));
                     if (loadedFromConfig)
                     {
                         this.m_LMaplists[i].Maplist[j].MapFileName = strValue;
-                        string strPublicGameMode = "";
+                        String strPublicGameMode = "";
                         foreach (CMap map in this.GetMapDefines())
                         {
                             if (this.m_LMaplists[i].Maplist[j].Gamemode == map.PlayList && strValue == map.FileName)
@@ -1595,10 +1631,10 @@ namespace PRoConEvents {
                         UpdateVariableLists(strVariable, this.m_LMaplists[i].Maplist[j].MapFileName, strValue);
                     }
                 }
-                else if (strVariable.Length > 6 && strVariable.Substring(strVariable.Length-6).CompareTo("Rounds") == 0 && int.TryParse(strValue, out iValue) == true)
+                else if (strVariable.Length > 6 && strVariable.Substring(strVariable.Length - 6).CompareTo("Rounds") == 0 && Int32.TryParse(strValue, out iValue) == true)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
-                    int j = int.Parse(strVariable.Substring(strVariable.LastIndexOf("[")+1, strVariable.LastIndexOf("]")-strVariable.LastIndexOf("[")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
+                    Int32 j = Int32.Parse(strVariable.Substring(strVariable.LastIndexOf("[") + 1, strVariable.LastIndexOf("]") - strVariable.LastIndexOf("[") - 1));
                     if (iValue < 1)
                     {
                         iValue = 1;
@@ -1606,38 +1642,38 @@ namespace PRoConEvents {
                     this.m_LMaplists[i].Maplist[j].Rounds = iValue;
                     UpdateVariableLists(strVariable, iValue);
                 }
-                else if (strVariable.Length > 6 && strVariable.Substring(strVariable.Length-6).CompareTo("Preset") == 0 && this.m_DPreset.ContainsKey(strValue))
+                else if (strVariable.Length > 6 && strVariable.Substring(strVariable.Length - 6).CompareTo("Preset") == 0 && this.m_DPreset.ContainsKey(strValue))
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
-                    int j = int.Parse(strVariable.Substring(strVariable.LastIndexOf("[")+1, strVariable.LastIndexOf("]")-strVariable.LastIndexOf("[")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
+                    Int32 j = Int32.Parse(strVariable.Substring(strVariable.LastIndexOf("[") + 1, strVariable.LastIndexOf("]") - strVariable.LastIndexOf("[") - 1));
                     this.m_LMaplists[i].Maplist[j].Preset = strValue;
                     UpdateVariableLists(strVariable, strValue);
                 }
-                else if (strVariable.Length > 26 && strVariable.Substring(strVariable.Length-26).CompareTo("Preset (after level loads)") == 0 && (strValue == "None" || this.m_DPreset.ContainsKey(strValue)))
+                else if (strVariable.Length > 26 && strVariable.Substring(strVariable.Length - 26).CompareTo("Preset (after level loads)") == 0 && (strValue == "None" || this.m_DPreset.ContainsKey(strValue)))
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
-                    int j = int.Parse(strVariable.Substring(strVariable.LastIndexOf("[")+1, strVariable.LastIndexOf("]")-strVariable.LastIndexOf("[")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
+                    Int32 j = Int32.Parse(strVariable.Substring(strVariable.LastIndexOf("[") + 1, strVariable.LastIndexOf("]") - strVariable.LastIndexOf("[") - 1));
                     this.m_LMaplists[i].Maplist[j].LoadPreset = strValue;
                     UpdateVariableLists(strVariable, strValue);
                 }
-                else if (strVariable.Length > 10 && strVariable.Substring(strVariable.Length-10).CompareTo("Manage Map") == 0)
+                else if (strVariable.Length > 10 && strVariable.Substring(strVariable.Length - 10).CompareTo("Manage Map") == 0)
                 {
-                    int i = int.Parse(strVariable.Substring(1,strVariable.IndexOf("]")-1));
-                    int j = int.Parse(strVariable.Substring(strVariable.LastIndexOf("[")+1, strVariable.LastIndexOf("]")-strVariable.LastIndexOf("[")-1));
+                    Int32 i = Int32.Parse(strVariable.Substring(1, strVariable.IndexOf("]") - 1));
+                    Int32 j = Int32.Parse(strVariable.Substring(strVariable.LastIndexOf("[") + 1, strVariable.LastIndexOf("]") - strVariable.LastIndexOf("[") - 1));
                     if (strValue.CompareTo("Move Up") == 0 && j > 0)
                     {
-                        this.m_LMaplists[i].Maplist.Insert(j-1, this.m_LMaplists[i].Maplist[j]);
-                        this.m_LMaplists[i].Maplist.RemoveAt(j+1);
-                        for (int k = j-1; k < this.m_LMaplists[i].Maplist.Count; k++)
+                        this.m_LMaplists[i].Maplist.Insert(j - 1, this.m_LMaplists[i].Maplist[j]);
+                        this.m_LMaplists[i].Maplist.RemoveAt(j + 1);
+                        for (Int32 k = j - 1; k < this.m_LMaplists[i].Maplist.Count; k++)
                         {
                             this.m_LMaplists[i].Maplist[k].Index = k;
                         }
                     }
                     if (strValue.CompareTo("Move Down") == 0 && j < this.m_LMaplists[i].Maplist.Count - 1)
                     {
-                        this.m_LMaplists[i].Maplist.Insert(j+2, this.m_LMaplists[i].Maplist[j]);
+                        this.m_LMaplists[i].Maplist.Insert(j + 2, this.m_LMaplists[i].Maplist[j]);
                         this.m_LMaplists[i].Maplist.RemoveAt(j);
-                        for (int k = j; k < this.m_LMaplists[i].Maplist.Count; k++)
+                        for (Int32 k = j; k < this.m_LMaplists[i].Maplist.Count; k++)
                         {
                             this.m_LMaplists[i].Maplist[k].Index = k;
                         }
@@ -1645,7 +1681,7 @@ namespace PRoConEvents {
                     if (strValue.CompareTo("Remove Map") == 0 && this.m_LMaplists[i].Maplist.Count > 1)
                     {
                         this.m_LMaplists[i].Maplist.RemoveAt(j);
-                        for (int k = j; k < this.m_LMaplists[i].Maplist.Count; k++)
+                        for (Int32 k = j; k < this.m_LMaplists[i].Maplist.Count; k++)
                         {
                             this.m_LMaplists[i].Maplist[k].Index = k;
                         }
@@ -1655,43 +1691,51 @@ namespace PRoConEvents {
                 }
             }
 
-			this.RegisterAllCommands();
+            this.RegisterAllCommands();
         }
 
-        private void UnregisterAllCommands() {
-            List<string> emptyList = new List<string>();
-            this.UnregisterCommand(new MatchCommand(emptyList, "maplist", this.Listify<MatchArgumentFormat>(new MatchArgumentFormat("map list index",emptyList), new MatchArgumentFormat("on/off",emptyList))));
-            this.UnregisterCommand(new MatchCommand(emptyList, "maplist", this.Listify<MatchArgumentFormat>(new MatchArgumentFormat("map list index",emptyList))));
+        private void UnregisterAllCommands()
+        {
+            List<String> emptyList = new List<String>();
+            this.UnregisterCommand(new MatchCommand(emptyList, "maplist", this.Listify<MatchArgumentFormat>(new MatchArgumentFormat("map list index", emptyList), new MatchArgumentFormat("on/off", emptyList))));
+            this.UnregisterCommand(new MatchCommand(emptyList, "maplist", this.Listify<MatchArgumentFormat>(new MatchArgumentFormat("map list index", emptyList))));
             this.UnregisterCommand(new MatchCommand(emptyList, "maplist", this.Listify<MatchArgumentFormat>()));
         }
 
-        private void SetupHelpCommands() {
+        private void SetupHelpCommands()
+        {
         }
 
-        private void RegisterAllCommands() {
-            if (this.m_isPluginEnabled && this.m_enAdminCommands == enumBoolYesNo.Yes) {
-                List<string> mapListIndices = new List<string>();
-                foreach (MaplistConfig MCMaplist in this.m_LMaplists) {
+        private void RegisterAllCommands()
+        {
+            if (this.m_isPluginEnabled && this.m_enAdminCommands == enumBoolYesNo.Yes)
+            {
+                List<String> mapListIndices = new List<String>();
+                foreach (MaplistConfig MCMaplist in this.m_LMaplists)
+                {
                     mapListIndices.Add(MCMaplist.Index.ToString());
                 }
                 mapListIndices.Add("all");
 
-                this.RegisterCommand(new MatchCommand("CUltimateMapManager","OnCommandMapList", this.Listify<string>("@", "!", "#"), "maplist", this.Listify<MatchArgumentFormat>(new MatchArgumentFormat("map list index", mapListIndices), new MatchArgumentFormat("on/off", new List<string>(new string[] {"on", "off"}))), new ExecutionRequirements(ExecutionScope.Privileges,Privileges.CanUseMapFunctions,"You do not have enough privileges to change the map list"),"Enables or disables the specified map list"));
-                this.RegisterCommand(new MatchCommand("CUltimateMapManager","OnCommandMapListShow", this.Listify<string>("@", "!", "#"), "maplist", this.Listify<MatchArgumentFormat>(new MatchArgumentFormat("map list index", mapListIndices)), new ExecutionRequirements(ExecutionScope.Privileges,Privileges.CanUseMapFunctions,"You do not have enough privileges to change the map list"),"Displays the status of the specified map list"));
-                this.RegisterCommand(new MatchCommand("CUltimateMapManager","OnCommandMapListShowCurrent", this.Listify<string>("@", "!", "#"), "maplist", this.Listify<MatchArgumentFormat>(), new ExecutionRequirements(ExecutionScope.Privileges,Privileges.CanUseMapFunctions,"You do not have enough privileges to change the map list"),"Displays the status of all map lists"));
+                this.RegisterCommand(new MatchCommand("CUltimateMapManager", "OnCommandMapList", this.Listify<String>("@", "!", "#"), "maplist", this.Listify<MatchArgumentFormat>(new MatchArgumentFormat("map list index", mapListIndices), new MatchArgumentFormat("on/off", new List<String>(new String[] { "on", "off" }))), new ExecutionRequirements(ExecutionScope.Privileges, Privileges.CanUseMapFunctions, "You do not have enough privileges to change the map list"), "Enables or disables the specified map list"));
+                this.RegisterCommand(new MatchCommand("CUltimateMapManager", "OnCommandMapListShow", this.Listify<String>("@", "!", "#"), "maplist", this.Listify<MatchArgumentFormat>(new MatchArgumentFormat("map list index", mapListIndices)), new ExecutionRequirements(ExecutionScope.Privileges, Privileges.CanUseMapFunctions, "You do not have enough privileges to change the map list"), "Displays the status of the specified map list"));
+                this.RegisterCommand(new MatchCommand("CUltimateMapManager", "OnCommandMapListShowCurrent", this.Listify<String>("@", "!", "#"), "maplist", this.Listify<MatchArgumentFormat>(), new ExecutionRequirements(ExecutionScope.Privileges, Privileges.CanUseMapFunctions, "You do not have enough privileges to change the map list"), "Displays the status of all map lists"));
             }
         }
 
-        public override void OnLogin() {
+        public override void OnLogin()
+        {
             ResetVars();
         }
 
-        public override void OnServerInfo(CServerInfo csiServerInfo) {
+        public override void OnServerInfo(CServerInfo csiServerInfo)
+        {
             this.m_strCurrentMap = csiServerInfo.Map;
             this.m_strCurrentServerName = csiServerInfo.ServerName;
         }
 
-        public override void OnListPlayers(List<CPlayerInfo> lstPlayers, CPlayerSubset cpsSubset) {
+        public override void OnListPlayers(List<CPlayerInfo> lstPlayers, CPlayerSubset cpsSubset)
+        {
             if (cpsSubset.Subset == CPlayerSubset.PlayerSubsetType.All)
             {
                 this.m_iCurrentPlayerCount = lstPlayers.Count;
@@ -1703,23 +1747,26 @@ namespace PRoConEvents {
                         GetMapInfo();
                     }
                 }
-                else 
+                else
                 {
                     GetMapInfo();
                 }
             }
         }
 
-        public override void OnMaplistSave() {
+        public override void OnMaplistSave()
+        {
             this.ExecuteCommand("procon.protected.send", "mapList.list");
         }
 
-        public override void OnMaplistGetRounds(int currentRound, int totalRounds) {
+        public override void OnMaplistGetRounds(Int32 currentRound, Int32 totalRounds)
+        {
             this.m_blIsFirstRound = (currentRound == 0);
             this.m_blIsLastRound = (currentRound + 1 >= totalRounds);
         }
 
-        public override void OnMaplistGetMapIndices(int mapIndex, int nextIndex) {
+        public override void OnMaplistGetMapIndices(Int32 mapIndex, Int32 nextIndex)
+        {
             if (this.m_blRestartRequested || !this.m_blIsLastRound)
             {
                 this.m_iNextMapIndex = mapIndex;
@@ -1742,7 +1789,8 @@ namespace PRoConEvents {
             }
         }
 
-        public override void OnPlayerLeft(CPlayerInfo playerInfo) {
+        public override void OnPlayerLeft(CPlayerInfo playerInfo)
+        {
             if (this.m_isPluginInitialized)
             {
                 this.m_iCurrentPlayerCount--;
@@ -1754,16 +1802,18 @@ namespace PRoConEvents {
             }
         }
 
-        public override void OnRoundOverTeamScores(List<TeamScore> teamScores) {
+        public override void OnRoundOverTeamScores(List<TeamScore> teamScores)
+        {
             this.m_blRoundEnded = true;
             this.m_blRestartRequested = false;
             this.m_blCheckPlayerCount = true;
             this.m_iCurrentRoundCount++;
             WritePluginConsole("INFO -> Round ended. Rounds run on this map list: " + this.m_iCurrentRoundCount);
             GetMapInfo();
-        }      
+        }
 
-        public override void OnRestartLevel() {
+        public override void OnRestartLevel()
+        {
             this.m_blRoundEnded = true;
             this.m_blRestartRequested = true;
             this.m_blCheckPlayerCount = true;
@@ -1772,138 +1822,170 @@ namespace PRoConEvents {
             GetMapInfo();
         }
 
-        public override void OnRunNextLevel() {
+        public override void OnRunNextLevel()
+        {
             this.m_blRoundEnded = true;
             this.m_blRestartRequested = true;
             this.m_blCheckPlayerCount = true;
             this.m_iCurrentRoundCount++;
             WritePluginConsole("INFO -> Next round requested. Rounds run on this map list: " + this.m_iCurrentRoundCount);
             GetMapInfo();
-        }      
+        }
 
-        public override void OnLevelLoaded(string mapFileName, string Gamemode, int roundsPlayed, int roundsTotal) {
-            if (this.m_enLoadPresets == enumBoolYesNo.Yes) {
+        public override void OnLevelLoaded(String mapFileName, String Gamemode, Int32 roundsPlayed, Int32 roundsTotal)
+        {
+            if (this.m_enLoadPresets == enumBoolYesNo.Yes)
+            {
                 this.ExecuteCommand("procon.protected.tasks.add", "CUltimateMapManager", "5", "1", "1", "procon.protected.plugins.call", "CUltimateMapManager", "SetLoadPreset");
             }
-            if (this.m_iCurrentPlayerCount == 0) {
+            if (this.m_iCurrentPlayerCount == 0)
+            {
                 this.m_blCheckPlayerCount = true;
                 GetMapInfo();
             }
             WritePluginConsole("INFO -> Level loaded.");
         }
 
-        public override void OnMaplistList(List<MaplistEntry> lstMaplist) {
+        public override void OnMaplistList(List<MaplistEntry> lstMaplist)
+        {
             this.m_LCurrentMapList = lstMaplist;
             this.m_isPluginInitialized = true;
         }
 
-        private void GetMapInfo() {
+        private void GetMapInfo()
+        {
             this.ExecuteCommand("procon.protected.send", "mapList.list");
             this.ExecuteCommand("procon.protected.send", "mapList.list", "100");
             this.ExecuteCommand("procon.protected.send", "mapList.getRounds");
             this.ExecuteCommand("procon.protected.send", "mapList.getMapIndices");
         }
 
-        private static List<T> Shuffle<T>(IList<T> list)  
-        {  
-            Random rng = new Random();  
-            int n = list.Count;  
-            while (n > 1) {  
-                n--;  
-                int k = rng.Next(n + 1);  
-                T value = list[k];  
-                list[k] = list[n];  
-                list[n] = value;  
+        private static List<T> Shuffle<T>(IList<T> list)
+        {
+            Random rng = new Random();
+            Int32 n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                Int32 k = rng.Next(n + 1);
+                T value = list[k];
+                list[k] = list[n];
+                list[n] = value;
             }
             return new List<T>(list);
         }
 
-        public void VotedMapInfo(string mapFileName, string gameMode) {
+        public void VotedMapInfo(String mapFileName, String gameMode)
+        {
             this.m_strVotedMapFileName = mapFileName;
             this.m_strVotedGameMode = gameMode;
         }
 
-        private void CheckPreset() {
+        private void CheckPreset()
+        {
             if (this.m_strCurrentPreset != this.m_LMaplists[this.m_iCurrentMapList].Maplist[this.m_iNextMapIndex].Preset || this.m_enPresetsAlways == enumBoolYesNo.Yes)
             {
                 this.m_strCurrentPreset = this.m_LMaplists[this.m_iCurrentMapList].Maplist[this.m_iNextMapIndex].Preset;
                 WritePluginConsole("WORK -> Next map: " + this.GetMapByFilename(this.m_LMaplists[this.m_iCurrentMapList].Maplist[this.m_iNextMapIndex].MapFileName).PublicLevelName + " (" + this.m_LMaplists[this.m_iCurrentMapList].Maplist[this.m_iNextMapIndex].PublicGamemode + "). Setting server preset to " + this.m_strCurrentPreset + ".");
-                foreach (string setting in this.m_DPreset[this.m_strCurrentPreset])
+                foreach (String setting in this.m_DPreset[this.m_strCurrentPreset])
                 {
-                    if (setting.Length > 0 && setting.Substring(0,1).CompareTo("#") != 0)
+                    if (setting.Length > 0 && setting.Substring(0, 1).CompareTo("#") != 0)
                     {
-                        int split = setting.IndexOf(' ');
-                        this.ExecuteCommand("procon.protected.send", setting.Substring(0, split), setting.Substring(split+1).Trim('"'));
+                        Int32 split = setting.IndexOf(' ');
+                        this.ExecuteCommand("procon.protected.send", setting.Substring(0, split), setting.Substring(split + 1).Trim('"'));
                     }
                 }
             }
         }
 
-        public void SetLoadPreset() {
-            if (this.m_LMaplists[this.m_iCurrentMapList].Maplist[this.m_iNextMapIndex].LoadPreset != "None") {
+        public void SetLoadPreset()
+        {
+            if (this.m_LMaplists[this.m_iCurrentMapList].Maplist[this.m_iNextMapIndex].LoadPreset != "None")
+            {
                 this.m_strCurrentPreset = this.m_LMaplists[this.m_iCurrentMapList].Maplist[this.m_iNextMapIndex].LoadPreset;
                 WritePluginConsole("WORK -> Level loaded. Setting server preset to " + this.m_strCurrentPreset + ".");
-                foreach (string setting in this.m_DPreset[this.m_strCurrentPreset])
+                foreach (String setting in this.m_DPreset[this.m_strCurrentPreset])
                 {
-                    if (setting.Length > 0 && setting.Substring(0,1).CompareTo("#") != 0)
+                    if (setting.Length > 0 && setting.Substring(0, 1).CompareTo("#") != 0)
                     {
-                        int split = setting.IndexOf(' ');
-                        this.ExecuteCommand("procon.protected.send", setting.Substring(0, split), setting.Substring(split+1).Trim('"'));
+                        Int32 split = setting.IndexOf(' ');
+                        this.ExecuteCommand("procon.protected.send", setting.Substring(0, split), setting.Substring(split + 1).Trim('"'));
                     }
                 }
             }
         }
 
-        public void OnCommandMapList(string strSpeaker, string strText, MatchCommand mtcCommand, CapturedCommand capCommand, CPlayerSubset subMatchedScope) {
-            if (this.m_enAdminCommands == enumBoolYesNo.Yes) {
-                int iMaplist = 0;
-                if (int.TryParse(capCommand.MatchedArguments[0].Argument, out iMaplist) == true) {
-                    if (capCommand.MatchedArguments[1].Argument == "on") {
-                        this.ExecuteCommand("procon.protected.plugins.setVariable", "CUltimateMapManager", "["+this.m_LMaplists[iMaplist].Index+"] Enable this map list?", "CONFIG:Yes");
-                        this.ExecuteCommand("procon.protected.send", "admin.say", "Map List "+this.m_LMaplists[iMaplist].Index+" ("+this.m_LMaplists[iMaplist].Name+") has been ENABLED.", "player", strSpeaker);
-                    } else if (capCommand.MatchedArguments[1].Argument == "off") {
-                        this.ExecuteCommand("procon.protected.plugins.setVariable", "CUltimateMapManager", "["+this.m_LMaplists[iMaplist].Index+"] Enable this map list?", "CONFIG:No");
-                        this.ExecuteCommand("procon.protected.send", "admin.say", "Map List "+this.m_LMaplists[iMaplist].Index+" ("+this.m_LMaplists[iMaplist].Name+") has been DISABLED.", "player", strSpeaker);
+        public void OnCommandMapList(String strSpeaker, String strText, MatchCommand mtcCommand, CapturedCommand capCommand, CPlayerSubset subMatchedScope)
+        {
+            if (this.m_enAdminCommands == enumBoolYesNo.Yes)
+            {
+                Int32 iMaplist = 0;
+                if (Int32.TryParse(capCommand.MatchedArguments[0].Argument, out iMaplist) == true)
+                {
+                    if (capCommand.MatchedArguments[1].Argument == "on")
+                    {
+                        this.ExecuteCommand("procon.protected.plugins.setVariable", "CUltimateMapManager", "[" + this.m_LMaplists[iMaplist].Index + "] Enable this map list?", "CONFIG:Yes");
+                        this.ExecuteCommand("procon.protected.send", "admin.say", "Map List " + this.m_LMaplists[iMaplist].Index + " (" + this.m_LMaplists[iMaplist].Name + ") has been ENABLED.", "player", strSpeaker);
+                    }
+                    else if (capCommand.MatchedArguments[1].Argument == "off")
+                    {
+                        this.ExecuteCommand("procon.protected.plugins.setVariable", "CUltimateMapManager", "[" + this.m_LMaplists[iMaplist].Index + "] Enable this map list?", "CONFIG:No");
+                        this.ExecuteCommand("procon.protected.send", "admin.say", "Map List " + this.m_LMaplists[iMaplist].Index + " (" + this.m_LMaplists[iMaplist].Name + ") has been DISABLED.", "player", strSpeaker);
                     }
                 }
             }
         }
 
-        public void OnCommandMapListShow(string strSpeaker, string strText, MatchCommand mtcCommand, CapturedCommand capCommand, CPlayerSubset subMatchedScope) {
-            if (this.m_enAdminCommands == enumBoolYesNo.Yes) {
-                int iMaplist = 0;
-                if (capCommand.MatchedArguments[0].Argument == "all") {
-                    foreach (MaplistConfig MCMaplist in this.m_LMaplists) {
-                        if (MCMaplist.Enabled == enumBoolYesNo.Yes) {
-                            this.ExecuteCommand("procon.protected.send", "admin.say", "Map List "+MCMaplist.Index+" ("+MCMaplist.Name+") is ENABLED.", "player", strSpeaker);
-                        } else {
-                            this.ExecuteCommand("procon.protected.send", "admin.say", "Map List "+MCMaplist.Index+" ("+MCMaplist.Name+") is DISABLED.", "player", strSpeaker);
+        public void OnCommandMapListShow(String strSpeaker, String strText, MatchCommand mtcCommand, CapturedCommand capCommand, CPlayerSubset subMatchedScope)
+        {
+            if (this.m_enAdminCommands == enumBoolYesNo.Yes)
+            {
+                Int32 iMaplist = 0;
+                if (capCommand.MatchedArguments[0].Argument == "all")
+                {
+                    foreach (MaplistConfig MCMaplist in this.m_LMaplists)
+                    {
+                        if (MCMaplist.Enabled == enumBoolYesNo.Yes)
+                        {
+                            this.ExecuteCommand("procon.protected.send", "admin.say", "Map List " + MCMaplist.Index + " (" + MCMaplist.Name + ") is ENABLED.", "player", strSpeaker);
+                        }
+                        else
+                        {
+                            this.ExecuteCommand("procon.protected.send", "admin.say", "Map List " + MCMaplist.Index + " (" + MCMaplist.Name + ") is DISABLED.", "player", strSpeaker);
                         }
                     }
-                } else if (int.TryParse(capCommand.MatchedArguments[0].Argument, out iMaplist) == true) {
-                    if (this.m_LMaplists[iMaplist].Enabled == enumBoolYesNo.Yes) {
-                        this.ExecuteCommand("procon.protected.send", "admin.say", "Map List "+this.m_LMaplists[iMaplist].Index+" ("+this.m_LMaplists[iMaplist].Name+") is ENABLED.", "player", strSpeaker);
-                    } else {
-                        this.ExecuteCommand("procon.protected.send", "admin.say", "Map List "+this.m_LMaplists[iMaplist].Index+" ("+this.m_LMaplists[iMaplist].Name+") is DISABLED.", "player", strSpeaker);
+                }
+                else if (Int32.TryParse(capCommand.MatchedArguments[0].Argument, out iMaplist) == true)
+                {
+                    if (this.m_LMaplists[iMaplist].Enabled == enumBoolYesNo.Yes)
+                    {
+                        this.ExecuteCommand("procon.protected.send", "admin.say", "Map List " + this.m_LMaplists[iMaplist].Index + " (" + this.m_LMaplists[iMaplist].Name + ") is ENABLED.", "player", strSpeaker);
+                    }
+                    else
+                    {
+                        this.ExecuteCommand("procon.protected.send", "admin.say", "Map List " + this.m_LMaplists[iMaplist].Index + " (" + this.m_LMaplists[iMaplist].Name + ") is DISABLED.", "player", strSpeaker);
                     }
                 }
             }
         }
 
-        public void OnCommandMapListShowCurrent(string strSpeaker, string strText, MatchCommand mtcCommand, CapturedCommand capCommand, CPlayerSubset subMatchedScope) {
-            if (this.m_enAdminCommands == enumBoolYesNo.Yes) {
-                this.ExecuteCommand("procon.protected.send", "admin.say", "Current map list is Map List "+this.m_iCurrentMapList+" ("+this.m_LMaplists[this.m_iCurrentMapList].Name+").", "player", strSpeaker);
+        public void OnCommandMapListShowCurrent(String strSpeaker, String strText, MatchCommand mtcCommand, CapturedCommand capCommand, CPlayerSubset subMatchedScope)
+        {
+            if (this.m_enAdminCommands == enumBoolYesNo.Yes)
+            {
+                this.ExecuteCommand("procon.protected.send", "admin.say", "Current map list is Map List " + this.m_iCurrentMapList + " (" + this.m_LMaplists[this.m_iCurrentMapList].Name + ").", "player", strSpeaker);
             }
         }
 
-        public void CheckPlayerCount() {
-            bool mapListChanged = false;
+        public void CheckPlayerCount()
+        {
+            Boolean mapListChanged = false;
             if (this.m_isPluginInitialized && this.m_enMapManager == enumBoolYesNo.Yes)
             {
                 // determine current map list
                 if (this.m_iCurrentMapList == -1)
                 {
-                    int foundCurrentMapList = -1;
+                    Int32 foundCurrentMapList = -1;
                     foreach (MaplistConfig MCMaplist in this.m_LMaplists)
                     {
                         if (MCMaplist.Enabled == enumBoolYesNo.Yes && MCMaplist.Maplist.Count == this.m_LCurrentMapList.Count && this.m_iCurrentPlayerCount >= MCMaplist.MinPlayers && this.m_iCurrentPlayerCount <= MCMaplist.MaxPlayers && (this.m_enTimeOptions == enumBoolYesNo.No || this.m_enTimeOptions == enumBoolYesNo.Yes && MCMaplist.isValidDay(this.m_strTimeZone, (this.m_blUseSystemTZ && this.m_enUseSystemTZ == enumBoolYesNo.No), MCMaplist.TimeStart, MCMaplist.TimeStop)))
@@ -1971,8 +2053,8 @@ namespace PRoConEvents {
                     {
                         mapList = Shuffle(mapList);
                     }
-                    int mapIndex = 0;
-                    int nextMapIndex = 0;
+                    Int32 mapIndex = 0;
+                    Int32 nextMapIndex = 0;
                     if (this.m_strVotedMapFileName != "")
                     {
                         foreach (MaplistConfig.MaplistInfo MEMap in mapList)
@@ -1990,7 +2072,7 @@ namespace PRoConEvents {
                     }
                     else if (this.m_LMaplists[this.m_iCurrentMapList].MapListStart.CompareTo("Start with random map") == 0)
                     {
-                        int randomNumber = (new Random()).Next(0, mapList.Count-1);
+                        Int32 randomNumber = (new Random()).Next(0, mapList.Count - 1);
                         if (this.m_strCurrentMap == mapList[randomNumber].MapFileName)
                         {
                             nextMapIndex = (randomNumber + 1) % mapList.Count;
@@ -2029,7 +2111,8 @@ namespace PRoConEvents {
                         }
                     }
                     this.m_iNextMapIndex = nextMapIndex;
-                    if (this.m_enAllowPresets == enumBoolYesNo.Yes) {
+                    if (this.m_enAllowPresets == enumBoolYesNo.Yes)
+                    {
                         CheckPreset();
                     }
                     this.ExecuteCommand("procon.protected.send", "mapList.clear");
@@ -2043,10 +2126,13 @@ namespace PRoConEvents {
                         this.m_iCurrentRoundCount = -1;
                         if (this.m_enRestartWarning == enumBoolYesNo.Yes && this.m_iCurrentPlayerCount > 0)
                         {
-                            if (this.m_strServerGameType == "bf3" || this.m_strServerGameType == "bf4" || this.m_strServerGameType == "bfhl") {
-                                this.ExecuteCommand("procon.protected.send", "admin.yell", this.m_strRestartWarningMessage.Replace("[listname]", this.m_LMaplists[this.m_iCurrentMapList].Name).Replace("[secs]", this.m_enRestartWarningTime.ToString()), (this.m_enRestartWarningTime +1).ToString(), "all");
-                            } else if (this.m_strServerGameType == "mohw") {
-                                this.ExecuteCommand("procon.protected.send", "admin.yell", this.m_strRestartWarningMessage.Replace("[listname]", this.m_LMaplists[this.m_iCurrentMapList].Name).Replace("[secs]", this.m_enRestartWarningTime.ToString()), (this.m_enRestartWarningTime +1).ToString(), "8", "all");
+                            if (this.m_strServerGameType == "bf3" || this.m_strServerGameType == "bf4" || this.m_strServerGameType == "bfhl")
+                            {
+                                this.ExecuteCommand("procon.protected.send", "admin.yell", this.m_strRestartWarningMessage.Replace("[listname]", this.m_LMaplists[this.m_iCurrentMapList].Name).Replace("[secs]", this.m_enRestartWarningTime.ToString()), (this.m_enRestartWarningTime + 1).ToString(), "all");
+                            }
+                            else if (this.m_strServerGameType == "mohw")
+                            {
+                                this.ExecuteCommand("procon.protected.send", "admin.yell", this.m_strRestartWarningMessage.Replace("[listname]", this.m_LMaplists[this.m_iCurrentMapList].Name).Replace("[secs]", this.m_enRestartWarningTime.ToString()), (this.m_enRestartWarningTime + 1).ToString(), "8", "all");
                             }
                             this.ExecuteCommand("procon.protected.tasks.add", "CUltimateMapManager", (this.m_enRestartWarningTime + 3).ToString(), "1", "1", "procon.protected.plugins.call", "CUltimateMapManager", "DelayedNextRound");
                         }
@@ -2067,42 +2153,45 @@ namespace PRoConEvents {
             this.m_blRestartRequested = false;
         }
 
-        public void DelayedNextRound() {
+        public void DelayedNextRound()
+        {
             if (!this.m_blRoundEnded)
             {
                 this.ExecuteCommand("procon.protected.send", "mapList.runNextRound");
             }
         }
-      #endregion
+        #endregion
 
-#region helper_functions
+        #region helper_functions
 
-        private void WritePluginConsole(string message)
+        private void WritePluginConsole(String message)
         {
-            string line = String.Format("UltimateMapManager: {0}", message);
-            if (this.m_enDoDebugOutput == enumBoolYesNo.Yes) { 
-                this.ExecuteCommand("procon.protected.pluginconsole.write", line);
-            }
-        }
-
-        private void WritePluginConsole(string message, bool force)
-        {
-            string line = String.Format("UltimateMapManager: {0}", message);
-            if (this.m_enDoDebugOutput == enumBoolYesNo.Yes || force) { 
-                this.ExecuteCommand("procon.protected.pluginconsole.write", line);
-            }
-        }
-
-        private void WriteMessage(string message)
-        {
-            List<string> wordWrappedLines = this.WordWrap(message, 100);
-            foreach (string line in wordWrappedLines)
+            String line = String.Format("UltimateMapManager: {0}", message);
+            if (this.m_enDoDebugOutput == enumBoolYesNo.Yes)
             {
-                string formattedLine = String.Format("{0}", line);
+                this.ExecuteCommand("procon.protected.pluginconsole.write", line);
+            }
+        }
+
+        private void WritePluginConsole(String message, Boolean force)
+        {
+            String line = String.Format("UltimateMapManager: {0}", message);
+            if (this.m_enDoDebugOutput == enumBoolYesNo.Yes || force)
+            {
+                this.ExecuteCommand("procon.protected.pluginconsole.write", line);
+            }
+        }
+
+        private void WriteMessage(String message)
+        {
+            List<String> wordWrappedLines = this.WordWrap(message, 100);
+            foreach (String line in wordWrappedLines)
+            {
+                String formattedLine = String.Format("{0}", line);
                 this.ExecuteCommand("procon.protected.send", "admin.say", formattedLine, "all");
             }
         }
-#endregion
+        #endregion
 
     }
 }
