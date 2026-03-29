@@ -19,13 +19,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 
 using Microsoft.Win32;
 
@@ -220,7 +214,7 @@ namespace PRoConEvents
                             tzi.displayName = ((String)subKey.GetValue("Display")).Replace(",", ";");
                             tzi.standardName = (String)subKey.GetValue("Std");
                             tzi.daylightName = (String)subKey.GetValue("Dlt");
-                            tzi.InitTzi((byte[])subKey.GetValue("Tzi"));
+                            tzi.InitTzi((Byte[])subKey.GetValue("Tzi"));
                             timeZones.Add(tzi);
                         }
                     }
@@ -377,7 +371,7 @@ namespace PRoConEvents
                 [DllImport(KERNEL32)] public static extern Boolean TzSpecificLocalTimeToSystemTime([In] ref TIME_ZONE_INFORMATION lpTimeZone, [In] ref SYSTEMTIME lpLocalTime, out SYSTEMTIME lpUniversalTime);
             }
 
-            private void InitTzi(byte[] info)
+            private void InitTzi(Byte[] info)
             {
                 if (info.Length != Marshal.SizeOf(tzi))
                     throw new ArgumentException("Information size is incorrect", "info");
