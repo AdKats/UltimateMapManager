@@ -460,7 +460,7 @@ namespace PRoConEvents
 
         public String GetPluginAuthor()
         {
-            return "falcontx";
+            return "falcontx (maintained by Prophet731)";
         }
 
         public String GetPluginWebsite()
