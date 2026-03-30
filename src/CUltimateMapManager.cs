@@ -19,9 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-
-using Microsoft.Win32;
 
 using PRoCon.Core;
 using PRoCon.Core.Battlemap;
@@ -188,11 +185,11 @@ namespace PRoConEvents
 
         public class TimeZoneInformation
         {
-            private TZI tzi; // Current time zone information.
-            public String displayName; // Current time zone display name.
-            public String standardName; // Current time zone standard name (non-DST).
-            public String daylightName; // Current time zone daylight name (DST).
-            public static readonly List<TimeZoneInformation> timeZones; // static list of all time zones on machine.
+            public String displayName;
+            public String standardName;
+            public String daylightName;
+            private TimeZoneInfo tzi;
+            public static readonly List<TimeZoneInformation> timeZones;
 
             private TimeZoneInformation()
             {
@@ -202,22 +199,14 @@ namespace PRoConEvents
             {
                 timeZones = new List<TimeZoneInformation>();
 
-                using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones"))
+                foreach (TimeZoneInfo tz in TimeZoneInfo.GetSystemTimeZones())
                 {
-                    String[] zoneNames = key.GetSubKeyNames();
-
-                    foreach (String zoneName in zoneNames)
-                    {
-                        using (RegistryKey subKey = key.OpenSubKey(zoneName))
-                        {
-                            TimeZoneInformation tzi = new TimeZoneInformation();
-                            tzi.displayName = ((String)subKey.GetValue("Display")).Replace(",", ";");
-                            tzi.standardName = (String)subKey.GetValue("Std");
-                            tzi.daylightName = (String)subKey.GetValue("Dlt");
-                            tzi.InitTzi((Byte[])subKey.GetValue("Tzi"));
-                            timeZones.Add(tzi);
-                        }
-                    }
+                    TimeZoneInformation info = new TimeZoneInformation();
+                    info.displayName = tz.DisplayName.Replace(",", ";");
+                    info.standardName = tz.StandardName;
+                    info.daylightName = tz.DaylightName;
+                    info.tzi = tz;
+                    timeZones.Add(info);
                 }
             }
 
@@ -254,9 +243,9 @@ namespace PRoConEvents
                 get
                 {
                     List<String> list = new List<String>();
-                    foreach (TimeZoneInformation tzi in timeZones)
+                    foreach (TimeZoneInformation info in timeZones)
                     {
-                        list.Add(tzi.displayName);
+                        list.Add(info.displayName);
                     }
                     list.Sort(CompareTimeZones);
                     return list.ToArray();
@@ -268,123 +257,25 @@ namespace PRoConEvents
                 if (standardTimeZoneName == null)
                     standardTimeZoneName = ".";
                 if (standardTimeZoneName == ".")
-                    standardTimeZoneName = TimeZone.CurrentTimeZone.StandardName;
+                    standardTimeZoneName = TimeZoneInfo.Local.StandardName;
 
-                foreach (TimeZoneInformation tzi in TimeZoneInformation.timeZones)
+                foreach (TimeZoneInformation info in TimeZoneInformation.timeZones)
                 {
-                    if (tzi.displayName.Equals(standardTimeZoneName, StringComparison.OrdinalIgnoreCase))
-                        return tzi;
+                    if (info.displayName.Equals(standardTimeZoneName, StringComparison.OrdinalIgnoreCase))
+                        return info;
                 }
                 throw new ArgumentException("standardTimeZoneName not found.");
             }
 
             public DateTime ToLocalTime(DateTime utc)
             {
-                // Convert to SYSTEMTIME
-                SYSTEMTIME stUTC = DateTimeToSystemTime(utc);
-
-                // Set up the TIME_ZONE_INFORMATION
-                TIME_ZONE_INFORMATION tziNative = TziNative();
-                SYSTEMTIME stLocal;
-                NativeMethods.SystemTimeToTzSpecificLocalTime(ref tziNative, ref stUTC, out stLocal);
-
-                // Convert back to DateTime
-                return SystemTimeToDateTime(ref stLocal);
+                return TimeZoneInfo.ConvertTimeFromUtc(utc, tzi);
             }
 
             public static DateTime ToLocalTime(DateTime utc, String targetTimeZoneName)
             {
-                TimeZoneInformation tzi = TimeZoneInformation.GetTimeZone(targetTimeZoneName);
-                return tzi.ToLocalTime(utc);
-            }
-
-            private static SYSTEMTIME DateTimeToSystemTime(DateTime dt)
-            {
-                SYSTEMTIME st;
-                FILETIME ft = new FILETIME();
-                ft.dwHighDateTime = (Int32)(dt.Ticks >> 32);
-                ft.dwLowDateTime = (Int32)(dt.Ticks & 0xFFFFFFFFL);
-                NativeMethods.FileTimeToSystemTime(ref ft, out st);
-                return st;
-            }
-
-            private static DateTime SystemTimeToDateTime(ref SYSTEMTIME st)
-            {
-                FILETIME ft = new FILETIME();
-                NativeMethods.SystemTimeToFileTime(ref st, out ft);
-                DateTime dt = new DateTime((((Int64)ft.dwHighDateTime) << 32) | (uint)ft.dwLowDateTime);
-                return dt;
-            }
-
-            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-            private struct TIME_ZONE_INFORMATION
-            {
-                [MarshalAs(UnmanagedType.I4)] public Int32 Bias;
-                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public String StandardName;
-                public SYSTEMTIME StandardDate;
-                [MarshalAs(UnmanagedType.I4)] public Int32 StandardBias;
-                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public String DaylightName;
-                public SYSTEMTIME DaylightDate;
-                [MarshalAs(UnmanagedType.I4)] public Int32 DaylightBias;
-            }
-
-            public struct SYSTEMTIME
-            {
-                public ushort wYear;
-                public ushort wMonth;
-                public ushort wDayOfWeek;
-                public ushort wDay;
-                public ushort wHour;
-                public ushort wMinute;
-                public ushort wSecond;
-                public ushort wMilliseconds;
-            }
-
-            private struct TZI
-            {
-                public Int32 bias;
-                public Int32 standardBias;
-                public Int32 daylightBias;
-                public SYSTEMTIME standardDate;
-                public SYSTEMTIME daylightDate;
-            }
-
-            private TIME_ZONE_INFORMATION TziNative()
-            {
-                TIME_ZONE_INFORMATION tziNative = new TIME_ZONE_INFORMATION();
-                tziNative.Bias = tzi.bias;
-                tziNative.StandardDate = tzi.standardDate;
-                tziNative.StandardBias = tzi.standardBias;
-                tziNative.DaylightDate = tzi.daylightDate;
-                tziNative.DaylightBias = tzi.daylightBias;
-                return tziNative;
-            }
-
-            private struct NativeMethods
-            {
-                private const String KERNEL32 = "kernel32.dll";
-
-                [DllImport(KERNEL32)] public static extern uint GetTimeZoneInformation(out TIME_ZONE_INFORMATION lpTimeZoneInformation);
-                [DllImport(KERNEL32)] public static extern Boolean SystemTimeToTzSpecificLocalTime([In] ref TIME_ZONE_INFORMATION lpTimeZone, [In] ref SYSTEMTIME lpUniversalTime, out SYSTEMTIME lpLocalTime);
-                [DllImport(KERNEL32)] public static extern Boolean SystemTimeToFileTime([In] ref SYSTEMTIME lpSystemTime, out FILETIME lpFileTime);
-                [DllImport(KERNEL32)] public static extern Boolean FileTimeToSystemTime([In] ref FILETIME lpFileTime, out SYSTEMTIME lpSystemTime);
-                [DllImport(KERNEL32)] public static extern Boolean TzSpecificLocalTimeToSystemTime([In] ref TIME_ZONE_INFORMATION lpTimeZone, [In] ref SYSTEMTIME lpLocalTime, out SYSTEMTIME lpUniversalTime);
-            }
-
-            private void InitTzi(Byte[] info)
-            {
-                if (info.Length != Marshal.SizeOf(tzi))
-                    throw new ArgumentException("Information size is incorrect", "info");
-
-                GCHandle h = GCHandle.Alloc(info, GCHandleType.Pinned);
-                try
-                {
-                    tzi = (TZI)Marshal.PtrToStructure(h.AddrOfPinnedObject(), typeof(TZI));
-                }
-                finally
-                {
-                    h.Free();
-                }
+                TimeZoneInformation info = TimeZoneInformation.GetTimeZone(targetTimeZoneName);
+                return info.ToLocalTime(utc);
             }
         }
 
